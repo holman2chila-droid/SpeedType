@@ -1239,3 +1239,255 @@ body {
         gap: 12px;
     }
 }
+
+/* ===================================================
+   MODO VIDAS (SUPERVIVENCIA) — ESTILOS & ANIMACIONES
+   =================================================== */
+
+/* Ajuste dinámico de columnas para stats-bar cuando está activo el Modo Vidas */
+.stats-bar.has-lives {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 640px) {
+    .stats-bar.has-lives {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Contenedor del Switch en Setup */
+.survival-mode-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-top: 6px;
+    transition: all var(--transition-normal);
+}
+
+.survival-mode-card:hover {
+    border-color: var(--border-color-hover);
+}
+
+.survival-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.survival-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.survival-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.survival-title .heart-icon {
+    color: #ff3366;
+    filter: drop-shadow(0 0 6px rgba(255, 51, 102, 0.6));
+    animation: heart-beat 1.8s infinite ease-in-out;
+}
+
+.survival-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* Switch Toggle UI */
+.switch-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 34px;
+}
+
+.slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-secondary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+}
+
+.switch-toggle input:checked + .slider {
+    background-color: rgba(255, 51, 102, 0.25);
+    border-color: #ff3366;
+    box-shadow: 0 0 12px rgba(255, 51, 102, 0.4);
+}
+
+.switch-toggle input:checked + .slider::before {
+    transform: translateX(22px);
+    background-color: #ff3366;
+    box-shadow: 0 0 10px #ff3366;
+}
+
+/* Selector de Dificultad Animado */
+.difficulty-wrapper {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color);
+    animation: slideDownFade 0.35s ease-out forwards;
+}
+
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.difficulty-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.difficulty-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.btn-diff {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    outline: none;
+    color: var(--text-secondary);
+}
+
+.btn-diff:hover {
+    border-color: rgba(255, 51, 102, 0.4);
+    background: rgba(255, 51, 102, 0.05);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.btn-diff.active {
+    border-color: #ff3366;
+    background: linear-gradient(135deg, rgba(255, 51, 102, 0.15), rgba(255, 85, 119, 0.05));
+    box-shadow: 0 0 14px rgba(255, 51, 102, 0.25);
+    color: var(--text-primary);
+}
+
+.btn-diff .diff-tag {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.btn-diff .diff-val {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+}
+
+.btn-diff.diff-hardcore.active {
+    border-color: #ff2a2a;
+    box-shadow: 0 0 18px rgba(255, 42, 42, 0.4);
+}
+
+/* ===== ATMÓSFERA DE TENSIÓN CUANDO MODO VIDAS ESTÁ ACTIVO ===== */
+body.survival-active .glass-card.typing-card,
+body.survival-active .typing-input {
+    border-color: rgba(255, 51, 102, 0.4);
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.12);
+}
+
+body.survival-active .typing-input:focus {
+    border-color: #ff3366;
+    box-shadow: 0 0 0 4px rgba(255, 51, 102, 0.25), 0 0 30px rgba(255, 51, 102, 0.35);
+}
+
+/* Stat card de Vidas */
+.lives-highlight {
+    color: #ff3366 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.lives-hearts {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+/* Efecto de Daño al cometer error */
+.damage-hit {
+    animation: screen-shake 0.3s ease-in-out, damage-flash 0.3s ease-out;
+}
+
+@keyframes screen-shake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-6px, 3px); }
+    40% { transform: translate(6px, -3px); }
+    60% { transform: translate(-4px, -2px); }
+    80% { transform: translate(4px, 2px); }
+}
+
+@keyframes damage-flash {
+    0% { box-shadow: 0 0 0 6px rgba(255, 51, 102, 0.7), 0 0 40px rgba(255, 51, 102, 0.5); }
+    100% { box-shadow: none; }
+}
+
+@keyframes heart-beat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* Game Over en Resultados */
+.results-card.game-over-state .results-badge {
+    background: linear-gradient(135deg, #ff2a2a, #880022);
+    box-shadow: 0 0 25px rgba(255, 42, 42, 0.5);
+}
+
+.results-card.game-over-state .results-title {
+    background: linear-gradient(135deg, #ff5577, #ff2a2a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}

@@ -52,6 +52,18 @@
     const btnRandClassic = document.getElementById('btn-rand-classic');
     const btnRandLong = document.getElementById('btn-rand-long');
 
+    // Lives Mode DOM elements
+    const livesModeSwitch = document.getElementById('lives-mode-switch');
+    const difficultyWrapper = document.getElementById('difficulty-wrapper');
+    const diffButtons = document.querySelectorAll('.btn-diff');
+    const statsBar = document.getElementById('stats-bar');
+    const livesStatCard = document.getElementById('lives-stat-card');
+    const livesCountDisplay = document.getElementById('lives-count');
+    const livesHeartsDisplay = document.getElementById('lives-hearts');
+    const resultsCard = document.querySelector('.results-card');
+    const resultsTitle = document.querySelector('.results-title');
+    const resultsSubtitle = document.querySelector('.results-subtitle');
+
     // ===== State =====
     let originalText = '';
     let characters = [];       // Array of expected characters
@@ -69,6 +81,12 @@
     let isCountingDown = false;
     let countdownInterval = null;
     let countdownTimeout = null;
+
+    // ===== Lives Mode State =====
+    let isLivesMode = false;
+    let maxLives = 5;
+    let currentLives = 5;
+    let isGameOver = false;
 
     // ===== Theme State =====
     let currentTheme = localStorage.getItem('speedtype-theme') || 'dark';
@@ -147,6 +165,25 @@
             if (!isCountingDown && !typingInput.disabled) {
                 typingInput.focus();
             }
+        });
+
+        // --- Lives Mode events ---
+        livesModeSwitch.addEventListener('change', (e) => {
+            isLivesMode = e.target.checked;
+            if (isLivesMode) {
+                difficultyWrapper.classList.remove('hidden');
+            } else {
+                difficultyWrapper.classList.add('hidden');
+            }
+        });
+
+        diffButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                diffButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                maxLives = parseInt(btn.dataset.lives, 10);
+                currentLives = maxLives;
+            });
         });
     }
 
@@ -235,6 +272,10 @@
         startTime = null;
         isStarted = false;
         isFinished = false;
+        isGameOver = false;
+
+        // Reset lives for this round
+        currentLives = maxLives;
 
         if (timerInterval) {
             clearInterval(timerInterval);
@@ -247,9 +288,22 @@
         updateStats();
         syncInputBox();
 
+        // Configure survival mode atmosphere & lives stat card
+        if (isLivesMode) {
+            document.body.classList.add('survival-active');
+            livesStatCard.classList.remove('hidden');
+            statsBar.classList.add('has-lives');
+            updateLivesUI();
+        } else {
+            document.body.classList.remove('survival-active');
+            livesStatCard.classList.add('hidden');
+            statsBar.classList.remove('has-lives');
+        }
+
         // Switch to typing view
         showSection('typing');
         typingInput.classList.remove('has-error');
+        typingInput.classList.remove('damage-hit');
         typingInput.disabled = true;
 
         // Start 3-second animated countdown
@@ -257,6 +311,18 @@
             typingInput.disabled = false;
             typingInput.focus();
         });
+    }
+
+    // ===== Lives Mode Helpers =====
+    function updateLivesUI() {
+        if (!isLivesMode) return;
+        livesCountDisplay.textContent = currentLives;
+
+        if (maxLives === 1) {
+            livesHeartsDisplay.textContent = currentLives === 1 ? '💀' : '☠️';
+        } else {
+            livesHeartsDisplay.textContent = '❤️'.repeat(Math.max(0, currentLives)) + '🖤'.repeat(Math.max(0, maxLives - currentLives));
+        }
     }
 
     // ===== 3s Countdown =====
@@ -353,7 +419,7 @@
 
     // ===== Handle Input (character typed) =====
     function handleInput(e) {
-        if (isFinished || isCountingDown) return;
+        if (isFinished || isCountingDown || isGameOver) return;
 
         // Start timer on first keypress
         if (!isStarted) {
@@ -379,6 +445,27 @@
                     correctKeystrokes++;
                 } else {
                     totalErrors++;
+
+                    // ===== LIVES MODE: Deduct a life on each error =====
+                    if (isLivesMode) {
+                        currentLives--;
+                        updateLivesUI();
+
+                        // Damage hit visual feedback
+                        typingInput.classList.remove('damage-hit');
+                        void typingInput.offsetWidth; // Force reflow to re-trigger animation
+                        typingInput.classList.add('damage-hit');
+
+                        // Game Over if no lives left
+                        if (currentLives <= 0) {
+                            // Update display before game over so user sees last error
+                            syncInputBox();
+                            updateDisplay();
+                            updateStats();
+                            triggerGameOver();
+                            return;
+                        }
+                    }
                 }
             }
         } else if (inputVal.length < prevWord.length) {
@@ -405,7 +492,7 @@
 
     // ===== Handle Keydown (Backspace, Tab) =====
     function handleKeydown(e) {
-        if (isFinished || isCountingDown) return;
+        if (isFinished || isCountingDown || isGameOver) return;
 
         if (e.key === 'Backspace') {
             e.preventDefault();
@@ -593,6 +680,11 @@
         const wpm = minutes > 0 ? Math.round((characters.length / 5) / minutes) : 0;
         const accuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
 
+        // Reset results card to normal (non-game-over) state
+        resultsCard.classList.remove('game-over-state');
+        resultsTitle.textContent = '¡Prueba completada!';
+        resultsSubtitle.textContent = 'Aquí están tus resultados';
+
         // Fill results
         resultWpm.textContent = wpm;
         resultAccuracy.textContent = accuracy + '%';
@@ -603,6 +695,39 @@
         setTimeout(() => {
             showSection('results');
         }, 600);
+    }
+
+    // ===== Game Over (Lives Mode) =====
+    function triggerGameOver() {
+        isGameOver = true;
+        isFinished = true;
+        clearInterval(timerInterval);
+
+        // Block input immediately
+        typingInput.disabled = true;
+        typingInput.value = '¡GAME OVER!';
+
+        const elapsed = getElapsedSeconds();
+        const minutes = elapsed / 60;
+        const consecutiveCorrect = getConsecutiveCorrect();
+        const wpm = minutes > 0 ? Math.round((consecutiveCorrect / 5) / minutes) : 0;
+        const accuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 0;
+
+        // Fill results with stats up to the moment of death
+        resultWpm.textContent = wpm;
+        resultAccuracy.textContent = accuracy + '%';
+        resultTime.textContent = formatTime(elapsed);
+        resultErrors.textContent = totalErrors;
+
+        // Style results card as Game Over
+        resultsCard.classList.add('game-over-state');
+        resultsTitle.textContent = '¡GAME OVER!';
+        resultsSubtitle.textContent = 'Te has quedado sin vidas — modo supervivencia';
+
+        // Show results after a short delay
+        setTimeout(() => {
+            showSection('results');
+        }, 450);
     }
 
     // ===== Restart Test =====
@@ -616,6 +741,8 @@
     function goToSetup() {
         clearInterval(timerInterval);
         clearCountdown();
+        document.body.classList.remove('survival-active');
+        resultsCard.classList.remove('game-over-state');
         textInput.value = '';
         showSection('setup');
     }
