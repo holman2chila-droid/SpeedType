@@ -82,7 +82,21 @@
     const deadzoneBanner = document.getElementById('deadzone-banner');
     const deadzoneKeysDisplay = document.getElementById('deadzone-keys');
 
-    // Achievement Container DOM
+    // Anti-Cheat & Practice Mode DOM elements
+    const anticheatWarning = document.getElementById('anticheat-warning');
+    const anticheatWarningDesc = document.getElementById('anticheat-warning-desc');
+    const btnPracticeStart = document.getElementById('btn-practice-start');
+    const practiceModeBanner = document.getElementById('practice-mode-banner');
+
+    // Achievement Modal & Toast DOM elements
+    const achievementsToggle = document.getElementById('achievements-toggle');
+    const achievementsBadgeCount = document.getElementById('achievements-badge-count');
+    const achievementsModal = document.getElementById('achievements-modal');
+    const achievementsClose = document.getElementById('achievements-close');
+    const achievementsProgressScore = document.getElementById('achievements-progress-score');
+    const achievementsBarFill = document.getElementById('achievements-bar-fill');
+    const achievementsGrid = document.getElementById('achievements-grid');
+    const achCatButtons = document.querySelectorAll('.ach-cat-btn');
     const achievementContainer = document.getElementById('achievement-container');
 
     // ===== State =====
@@ -121,6 +135,27 @@
     let currentCombo = 0;
     let isOnFire = false;
     const FIRE_THRESHOLD = 30;
+
+    // ===== Word Streak & User Statistics State (Gamificación) =====
+    let currentWordStreak = 0;       // Racha de palabras correctas seguidas sin cometer errores
+    let currentWordHadError = false; // Indica si la palabra en curso tuvo algún fallo
+    let selectedAchievementCat = 'all';
+    let isEligibleForAchievements = true; // Interruptor antitrampas: false si falla validación y juega en práctica
+
+    // Cargar estadísticas guardadas del usuario
+    let userStats = {
+        testsCompleted: 0,
+        maxWordStreak: 0
+    };
+
+    try {
+        const savedStats = localStorage.getItem('speedtype-user-stats');
+        if (savedStats) {
+            userStats = Object.assign(userStats, JSON.parse(savedStats));
+        }
+    } catch (err) {
+        console.warn('Error reading speedtype-user-stats:', err);
+    }
 
     // ===== Storm Mode State =====
     let isStormMode = false;
@@ -167,16 +202,27 @@
         textInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                startTest();
+                handleStartAttempt();
             }
         });
 
-        startBtn.addEventListener('click', () => {
-            startTest();
+        textInput.addEventListener('input', () => {
+            hideAntiCheatWarning();
         });
+
+        startBtn.addEventListener('click', () => {
+            handleStartAttempt();
+        });
+
+        if (btnPracticeStart) {
+            btnPracticeStart.addEventListener('click', () => {
+                handleStartAttempt(true);
+            });
+        }
 
         // --- Random Texts events ---
         function setRandomText(type) {
+            hideAntiCheatWarning();
             const textsArray = typingTexts[type];
             if (textsArray && textsArray.length > 0) {
                 const randomIndex = Math.floor(Math.random() * textsArray.length);
@@ -283,6 +329,47 @@
         if (deadzoneModeSwitch) {
             deadzoneModeSwitch.addEventListener('change', (e) => setExclusiveMode('deadzone', e.target.checked));
         }
+
+        // --- Sistema de Logros: Inicialización & Eventos de Modal ---
+        loadAchievementsFromStorage();
+        updateAchievementsBadge();
+
+        if (achievementsToggle) {
+            achievementsToggle.addEventListener('click', () => {
+                renderAchievementsGrid();
+                updateAchievementsBadge();
+                if (achievementsModal) achievementsModal.classList.remove('hidden');
+            });
+        }
+
+        if (achievementsClose) {
+            achievementsClose.addEventListener('click', () => {
+                if (achievementsModal) achievementsModal.classList.add('hidden');
+            });
+        }
+
+        if (achievementsModal) {
+            achievementsModal.addEventListener('click', (e) => {
+                if (e.target === achievementsModal) {
+                    achievementsModal.classList.add('hidden');
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && achievementsModal && !achievementsModal.classList.contains('hidden')) {
+                achievementsModal.classList.add('hidden');
+            }
+        });
+
+        achCatButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                achCatButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedAchievementCat = btn.dataset.category || 'all';
+                renderAchievementsGrid();
+            });
+        });
     }
 
     // ===== Pick random text across ALL available categories =====
@@ -359,11 +446,160 @@
         });
     }
 
+    // ===== ANTI-CHEAT & CUSTOM TEXT VALIDATION =====
+    function checkIfSystemText(text) {
+        if (!text || typeof typingTexts === 'undefined') return false;
+        const normalized = text.trim();
+        for (const cat in typingTexts) {
+            if (typingTexts[cat] && typingTexts[cat].some(t => t.trim() === normalized)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function validateCustomText(text) {
+        if (!text || typeof text !== 'string') {
+            return { isValid: false, reason: 'El texto no puede estar vacío.' };
+        }
+
+        // Limpieza de espacios dobles y saltos de línea innecesarios
+        const cleanText = text.trim().replace(/\s+/g, ' ');
+        if (cleanText.length === 0) {
+            return { isValid: false, reason: 'El texto no puede estar vacío.' };
+        }
+
+        const words = cleanText.split(' ').filter(w => w.length > 0);
+        const totalWords = words.length;
+
+        if (totalWords < 3) {
+            return { isValid: false, reason: 'El texto debe contener al menos 3 palabras.' };
+        }
+
+        // Filtro 1: Longitud Mínima de Palabras Únicas (Diversidad Léxica >= 40% si totalWords > 10)
+        const normalizedWords = words.map(w =>
+            w.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '')
+        ).filter(Boolean);
+
+        const uniqueWords = new Set(normalizedWords).size;
+        const lexicalDiversity = (uniqueWords / totalWords) * 100;
+
+        if (totalWords > 10 && lexicalDiversity < 40) {
+            return {
+                isValid: false,
+                reason: `Diversidad léxica muy baja (${Math.round(lexicalDiversity)}%). El texto debe tener al menos 40% de palabras únicas.`
+            };
+        }
+
+        // Filtro 2: Patrones Repetitivos de Caracteres (El truco "aaaaa")
+        const repetitiveRegex = /(.)\1{3,}/i;
+        for (const word of words) {
+            if (repetitiveRegex.test(word)) {
+                return {
+                    isValid: false,
+                    reason: `Patrón repetitivo detectado en "${word}". No se permiten más de 3 caracteres iguales seguidos.`
+                };
+            }
+        }
+
+        // Filtro 3: Longitud Promedio de las Palabras (2.5 a 15 caracteres)
+        const totalLetters = words.reduce((acc, w) => acc + w.length, 0);
+        const avgWordLength = totalLetters / totalWords;
+
+        if (avgWordLength < 2.5) {
+            return {
+                isValid: false,
+                reason: `Palabras demasiado cortas (promedio: ${avgWordLength.toFixed(1)} letras). El promedio mínimo es 2.5.`
+            };
+        }
+
+        if (avgWordLength > 15) {
+            return {
+                isValid: false,
+                reason: `Palabras excesivamente largas (promedio: ${avgWordLength.toFixed(1)} letras). Incluye espacios naturales.`
+            };
+        }
+
+        return { isValid: true, reason: null };
+    }
+
+    function checkAntiCheat(text) {
+        return validateCustomText(text).isValid;
+    }
+
+    function showAntiCheatWarning(reason) {
+        if (textInput) {
+            textInput.classList.remove('shake-error', 'has-anticheat-error');
+            void textInput.offsetWidth; // Force CSS reflow to re-trigger shake animation
+            textInput.classList.add('shake-error', 'has-anticheat-error');
+        }
+        if (anticheatWarningDesc) {
+            anticheatWarningDesc.textContent = reason || 'Asegúrate de usar un texto real con palabras variadas.';
+        }
+        if (anticheatWarning) {
+            anticheatWarning.classList.remove('hidden');
+        }
+    }
+
+    function hideAntiCheatWarning() {
+        if (textInput) {
+            textInput.classList.remove('has-anticheat-error', 'shake-error');
+        }
+        if (anticheatWarning) {
+            anticheatWarning.classList.add('hidden');
+        }
+    }
+
+    function handleStartAttempt(forcePractice = false) {
+        const rawText = textInput.value.trim();
+
+        // 1. Si el textarea está vacío, cargar texto aleatorio del sistema
+        if (rawText.length === 0) {
+            textInput.value = getRandomTextFromAll();
+            isEligibleForAchievements = true;
+            hideAntiCheatWarning();
+            startTest();
+            return;
+        }
+
+        // 2. Si el texto coincide con una categoría del sistema
+        const isSystemText = checkIfSystemText(rawText);
+
+        if (isSystemText) {
+            isEligibleForAchievements = true;
+            hideAntiCheatWarning();
+            startTest();
+            return;
+        }
+
+        // 3. Si el usuario pulsó expresamente "Modo Práctica"
+        if (forcePractice) {
+            isEligibleForAchievements = false;
+            hideAntiCheatWarning();
+            startTest();
+            return;
+        }
+
+        // 4. Validar texto personalizado contra filtros antitrampas
+        const validation = validateCustomText(rawText);
+
+        if (validation.isValid) {
+            isEligibleForAchievements = true;
+            hideAntiCheatWarning();
+            startTest();
+        } else {
+            // Rechazar y mostrar retroalimentación con opción a Modo Práctica
+            showAntiCheatWarning(validation.reason);
+            showAchievementToast('⚠️', 'Texto No Válido para Logros', validation.reason);
+        }
+    }
+
     // ===== Start Test =====
     function startTest() {
         // If text is empty, pick a random text from all categories
         if (textInput.value.trim().length === 0) {
             textInput.value = getRandomTextFromAll();
+            isEligibleForAchievements = true;
         }
 
         originalText = textInput.value.trimEnd();
@@ -376,6 +612,7 @@
         isStarted = false;
         isFinished = false;
         isGameOver = false;
+        currentWordHadError = false;
 
         // Reset lives for this round
         currentLives = maxLives;
@@ -409,6 +646,15 @@
             document.body.classList.add('fade-active');
         } else {
             document.body.classList.remove('fade-active');
+        }
+
+        // Configure Practice Mode Atmosphere (Anti-Cheat)
+        if (!isEligibleForAchievements) {
+            document.body.classList.add('practice-active');
+            if (practiceModeBanner) practiceModeBanner.classList.remove('hidden');
+        } else {
+            document.body.classList.remove('practice-active');
+            if (practiceModeBanner) practiceModeBanner.classList.add('hidden');
         }
 
         // Configure Streak Combo (Siempre activo)
@@ -598,12 +844,25 @@
                         if (currentCombo >= FIRE_THRESHOLD && !isOnFire) {
                             activateFire();
                         }
+
+                        // Si el carácter esperado era un espacio y no hubo errores en la palabra
+                        if (expectedChar === ' ') {
+                            if (!currentWordHadError) {
+                                currentWordStreak++;
+                                userStats.maxWordStreak = Math.max(userStats.maxWordStreak, currentWordStreak);
+                                saveUserStats();
+                                checkStreakAchievements();
+                            }
+                            currentWordHadError = false;
+                        }
                     } else {
                         // Any other key (including pressing the broken key itself) is an ERROR!
                         typedChars.push(char === expectedChar ? '•' : char);
                         totalKeystrokes++;
                         totalErrors++;
                         currentCombo = 0;
+                        currentWordHadError = true;
+                        currentWordStreak = 0;
                         if (isOnFire) {
                             deactivateFire();
                         }
@@ -634,9 +893,22 @@
                         if (currentCombo >= FIRE_THRESHOLD && !isOnFire) {
                             activateFire();
                         }
+
+                        // Si se completó una palabra al pulsar espacio con éxito
+                        if (expectedChar === ' ') {
+                            if (!currentWordHadError) {
+                                currentWordStreak++;
+                                userStats.maxWordStreak = Math.max(userStats.maxWordStreak, currentWordStreak);
+                                saveUserStats();
+                                checkStreakAchievements();
+                            }
+                            currentWordHadError = false;
+                        }
                     } else {
                         totalErrors++;
                         currentCombo = 0;
+                        currentWordHadError = true;
+                        currentWordStreak = 0;
                         if (isOnFire) {
                             deactivateFire();
                         }
@@ -1065,52 +1337,355 @@
         if (deadzoneBanner) deadzoneBanner.classList.add('hidden');
     }
 
-    // ===== ACHIEVEMENTS SYSTEM =====
-    function checkAchievements(stats) {
-        const earned = [];
+    // ===== ACHIEVEMENTS DEFINITION & DATA =====
+    const ACHIEVEMENTS_LIST = [
+        // 1. Categoría: Rachas de Palabras Correctas Seguidas (Sin cometer errores)
+        {
+            id: 'racha-bronce',
+            titulo: 'Racha Bronce',
+            descripcion: 'Conseguir una racha de 30 palabras seguidas sin cometer errores.',
+            categoria: 'rachas',
+            icono: '🥉',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'racha-plata',
+            titulo: 'Racha Plata',
+            descripcion: 'Conseguir una racha de 90 palabras seguidas sin cometer errores.',
+            categoria: 'rachas',
+            icono: '🥈',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'racha-oro',
+            titulo: 'Racha Oro',
+            descripcion: 'Conseguir una racha de 200 palabras seguidas sin cometer errores.',
+            categoria: 'rachas',
+            icono: '🥇',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'racha-platino',
+            titulo: 'Racha Platino',
+            descripcion: 'Conseguir una racha de 500 palabras seguidas sin cometer errores.',
+            categoria: 'rachas',
+            icono: '💎',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'racha-divina',
+            titulo: 'Racha Divina',
+            descripcion: 'Conseguir una racha de 1000 palabras seguidas (Dificultad extrema).',
+            categoria: 'rachas',
+            icono: '👑',
+            completado: false,
+            fecha: null
+        },
 
-        // 1. "Cirujano": Precisión 100%
-        if (stats.accuracy === 100 && totalKeystrokes >= 20) {
-            earned.push({
-                icon: '🎯',
-                title: 'Cirujano',
-                desc: '¡Completaste la prueba con 100% de precisión perfecta!'
-            });
+        // 2. Categoría: Velocidad Pura (Palabras por Minuto - WPM)
+        {
+            id: 'wpm-40',
+            titulo: 'Velocidad Crucero',
+            descripcion: 'Alcanzar 40 WPM en una prueba completada.',
+            categoria: 'velocidad',
+            icono: '🚗',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'wpm-60',
+            titulo: 'Mecanógrafo Veloz',
+            descripcion: 'Alcanzar 60 WPM en una prueba completada.',
+            categoria: 'velocidad',
+            icono: '⚡',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'wpm-80',
+            titulo: 'Rompiendo la Barrera',
+            descripcion: 'Alcanzar 80 WPM en una prueba completada.',
+            categoria: 'velocidad',
+            icono: '🚀',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'wpm-120',
+            titulo: 'Modo Dios',
+            descripcion: 'Alcanzar 120 WPM en una prueba completada.',
+            categoria: 'velocidad',
+            icono: '🔮',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'wpm-160',
+            titulo: 'Inalcanzable',
+            descripcion: 'Alcanzar 160 WPM o más en una prueba completada.',
+            categoria: 'velocidad',
+            icono: '🌌',
+            completado: false,
+            fecha: null
+        },
+
+        // 3. Categoría: Precisión Perfecta (100% Accuracy)
+        {
+            id: 'acc-50',
+            titulo: 'Cirujano del Teclado',
+            descripcion: 'Terminar un texto de más de 50 palabras con 100% de precisión.',
+            categoria: 'precision',
+            icono: '🎯',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'acc-150',
+            titulo: 'Mente Fría',
+            descripcion: 'Terminar un texto de más de 150 palabras con 100% de precisión.',
+            categoria: 'precision',
+            icono: '❄️',
+            completado: false,
+            fecha: null
+        },
+
+        // 4. Categoría: Modo Vidas (Supervivencia)
+        {
+            id: 'survivor-med',
+            titulo: 'Sobreviviente',
+            descripcion: 'Completar un texto en dificultad "Medio" (5 vidas) sin morir.',
+            categoria: 'vidas',
+            icono: '🛡️',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'survivor-exp',
+            titulo: 'Inmortal',
+            descripcion: 'Completar un texto en dificultad "Experto" (1 vida) con éxito.',
+            categoria: 'vidas',
+            icono: '💀',
+            completado: false,
+            fecha: null
+        },
+
+        // 5. Categoría: Persistencia (Consistencia en el tiempo)
+        {
+            id: 'tests-10',
+            titulo: 'Adicto al Click',
+            descripcion: 'Completar 10 pruebas en total.',
+            categoria: 'persistencia',
+            icono: '⌨️',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'tests-100',
+            titulo: 'Leyenda Local',
+            descripcion: 'Completar 100 pruebas en total.',
+            categoria: 'persistencia',
+            icono: '🏆',
+            completado: false,
+            fecha: null
+        },
+        {
+            id: 'tests-500',
+            titulo: 'Gran Maestro',
+            descripcion: 'Completar 500 pruebas en total.',
+            categoria: 'persistencia',
+            icono: '🌟',
+            completado: false,
+            fecha: null
         }
+    ];
 
-        // 2. "Por un pelo": Completar modo vidas con 1 sola vida restante
-        if (isLivesMode && !stats.isGameOver && currentLives === 1) {
-            earned.push({
-                icon: '😰',
-                title: 'Por un pelo',
-                desc: '¡Superaste el Modo Vidas con solo 1 vida restante!'
-            });
+    // ===== ACHIEVEMENTS HELPERS & STORAGE =====
+    function loadAchievementsFromStorage() {
+        try {
+            const stored = localStorage.getItem('speedtype-achievements-data');
+            if (stored) {
+                const data = JSON.parse(stored);
+                ACHIEVEMENTS_LIST.forEach(ach => {
+                    if (data[ach.id] && data[ach.id].completado) {
+                        ach.completado = true;
+                        ach.fecha = data[ach.id].fecha || null;
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Error loading achievements from storage:', e);
         }
+    }
 
-        // 3. "Velocidad de la luz": Superar 100 WPM
-        if (stats.wpm >= 100) {
-            earned.push({
-                icon: '⚡',
-                title: 'Velocidad de la luz',
-                desc: '¡Alcanzaste una velocidad superior a 100 WPM!'
+    function saveAchievementsToStorage() {
+        try {
+            const data = {};
+            ACHIEVEMENTS_LIST.forEach(ach => {
+                if (ach.completado) {
+                    data[ach.id] = {
+                        completado: true,
+                        fecha: ach.fecha
+                    };
+                }
             });
+            localStorage.setItem('speedtype-achievements-data', JSON.stringify(data));
+        } catch (e) {
+            console.warn('Error saving achievements to storage:', e);
         }
+    }
 
-        // 4. "Inmune a las sombras": Superar Modo Desvanecimiento en modo Rápido (60 WPM)
-        if (isFadeMode && fadeWpm === 60 && !stats.isGhostOver && !stats.isGameOver) {
-            earned.push({
-                icon: '👻',
-                title: 'Inmune a las sombras',
-                desc: '¡Completaste el Modo Desvanecimiento a 60 WPM Rápido!'
-            });
+    function saveUserStats() {
+        try {
+            localStorage.setItem('speedtype-user-stats', JSON.stringify(userStats));
+        } catch (e) {
+            console.warn('Error saving user stats:', e);
         }
+    }
 
-        // Show toasts with staggered delay
-        earned.forEach((ach, index) => {
-            setTimeout(() => {
-                showAchievementToast(ach.icon, ach.title, ach.desc);
-            }, 600 + index * 1400);
+    function updateAchievementsBadge() {
+        const completedCount = ACHIEVEMENTS_LIST.filter(a => a.completado).length;
+        const totalCount = ACHIEVEMENTS_LIST.length;
+        const pct = Math.round((completedCount / totalCount) * 100);
+
+        if (achievementsBadgeCount) {
+            achievementsBadgeCount.textContent = `${completedCount}/${totalCount}`;
+        }
+        if (achievementsProgressScore) {
+            achievementsProgressScore.textContent = `${completedCount} / ${totalCount} (${pct}%)`;
+        }
+        if (achievementsBarFill) {
+            achievementsBarFill.style.width = `${pct}%`;
+        }
+    }
+
+    function renderAchievementsGrid() {
+        if (!achievementsGrid) return;
+        achievementsGrid.innerHTML = '';
+
+        const list = selectedAchievementCat === 'all'
+            ? ACHIEVEMENTS_LIST
+            : ACHIEVEMENTS_LIST.filter(a => a.categoria === selectedAchievementCat);
+
+        list.forEach(ach => {
+            const card = document.createElement('div');
+            card.className = `ach-card ${ach.completado ? 'ach-unlocked' : 'ach-locked'}`;
+            card.innerHTML = `
+                <div class="ach-card-top">
+                    <span class="ach-card-icon">${ach.icono}</span>
+                    <span class="ach-status-badge">
+                        ${ach.completado ? '✓ Desbloqueado' : '🔒 Bloqueado'}
+                    </span>
+                </div>
+                <div class="ach-card-title">${ach.titulo}</div>
+                <div class="ach-card-desc">${ach.descripcion}</div>
+                ${ach.completado && ach.fecha ? `
+                    <div class="ach-card-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Desbloqueado: ${ach.fecha}
+                    </div>
+                ` : ''}
+            `;
+            achievementsGrid.appendChild(card);
         });
+    }
+
+    // ===== PREVENCIÓN OBLIGATORIA DEL BUG DE DUPLICACIÓN =====
+    function unlockAchievement(id) {
+        // 0. Verificación Anti-Cheat: Si el texto no es elegible para logros (Modo Práctica), abortar
+        if (!isEligibleForAchievements) {
+            return;
+        }
+
+        const ach = ACHIEVEMENTS_LIST.find(a => a.id === id);
+        if (!ach) return;
+
+        // 1. Verificación obligatoria: si el campo completado ya es true, ignorar inmediatamente
+        if (ach.completado === true) {
+            return;
+        }
+
+        // Doble verificación directa contra localStorage
+        try {
+            const raw = localStorage.getItem('speedtype-achievements-data');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed[id] && parsed[id].completado === true) {
+                    ach.completado = true;
+                    ach.fecha = parsed[id].fecha || null;
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        // 2. Cambiar inmediatamente el estado a true
+        ach.completado = true;
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+        ach.fecha = formattedDate;
+
+        // 3. Sincronizar inmediatamente con localStorage ANTES de cualquier animación o renderizado
+        saveAchievementsToStorage();
+
+        // 4. Actualizar la UI del contador y del modal si está visible
+        updateAchievementsBadge();
+        renderAchievementsGrid();
+
+        // 5. Disparar notificación toast visual
+        showAchievementToast(ach.icono, ach.titulo, ach.descripcion);
+    }
+
+    function checkStreakAchievements() {
+        if (currentWordStreak >= 30) unlockAchievement('racha-bronce');
+        if (currentWordStreak >= 90) unlockAchievement('racha-plata');
+        if (currentWordStreak >= 200) unlockAchievement('racha-oro');
+        if (currentWordStreak >= 500) unlockAchievement('racha-platino');
+        if (currentWordStreak >= 1000) unlockAchievement('racha-divina');
+    }
+
+    function checkAllAchievements(stats) {
+        if (stats.isGameOver || stats.isGhostOver) return;
+
+        const totalWordsInText = originalText.trim().split(/\s+/).filter(Boolean).length;
+
+        // --- Categoría: Velocidad Pura ---
+        if (stats.wpm >= 40) unlockAchievement('wpm-40');
+        if (stats.wpm >= 60) unlockAchievement('wpm-60');
+        if (stats.wpm >= 80) unlockAchievement('wpm-80');
+        if (stats.wpm >= 120) unlockAchievement('wpm-120');
+        if (stats.wpm >= 160) unlockAchievement('wpm-160');
+
+        // --- Categoría: Precisión Perfecta ---
+        if (stats.accuracy === 100 && totalWordsInText >= 50) {
+            unlockAchievement('acc-50');
+        }
+        if (stats.accuracy === 100 && totalWordsInText >= 150) {
+            unlockAchievement('acc-150');
+        }
+
+        // --- Categoría: Modo Vidas (Supervivencia) ---
+        if (isLivesMode && !stats.isGameOver) {
+            if (maxLives === 5) {
+                unlockAchievement('survivor-med');
+            }
+            if (maxLives === 1) {
+                unlockAchievement('survivor-exp');
+            }
+        }
+
+        // --- Categoría: Persistencia ---
+        if (userStats.testsCompleted >= 10) unlockAchievement('tests-10');
+        if (userStats.testsCompleted >= 100) unlockAchievement('tests-100');
+        if (userStats.testsCompleted >= 500) unlockAchievement('tests-500');
     }
 
     function showAchievementToast(icon, title, desc) {
@@ -1129,7 +1704,7 @@
 
         achievementContainer.appendChild(toast);
 
-        // Remove toast after 4 seconds
+        // Desaparece a los 4 segundos con transición suave
         setTimeout(() => {
             toast.classList.add('toast-hiding');
             setTimeout(() => {
@@ -1145,6 +1720,8 @@
         stopFadeLoop();
         clearStorm();
         deactivateFire();
+        currentWordStreak = 0;
+        currentWordHadError = true;
         isGameOver = true;
         isFinished = true;
         clearInterval(timerInterval);
@@ -1172,12 +1749,6 @@
 
         setTimeout(() => {
             showSection('results');
-            checkAchievements({
-                wpm: wpm,
-                accuracy: accuracy,
-                isGameOver: false,
-                isGhostOver: true
-            });
         }, 450);
     }
 
@@ -1188,6 +1759,18 @@
         deactivateFire();
         isFinished = true;
         clearInterval(timerInterval);
+
+        // Si la última palabra no tuvo errores, contarla en la racha
+        if (!currentWordHadError) {
+            currentWordStreak++;
+            userStats.maxWordStreak = Math.max(userStats.maxWordStreak, currentWordStreak);
+            checkStreakAchievements();
+            currentWordHadError = false;
+        }
+
+        // Incrementar y persistir pruebas completadas
+        userStats.testsCompleted = (userStats.testsCompleted || 0) + 1;
+        saveUserStats();
 
         const elapsed = getElapsedSeconds();
         const minutes = elapsed / 60;
@@ -1205,15 +1788,17 @@
         resultTime.textContent = formatTime(elapsed);
         resultErrors.textContent = totalErrors;
 
+        // Evaluar logros de fin de prueba
+        checkAllAchievements({
+            wpm: wpm,
+            accuracy: accuracy,
+            isGameOver: false,
+            isGhostOver: false
+        });
+
         // Show results after a short delay for polish
         setTimeout(() => {
             showSection('results');
-            checkAchievements({
-                wpm: wpm,
-                accuracy: accuracy,
-                isGameOver: false,
-                isGhostOver: false
-            });
         }, 600);
     }
 
@@ -1222,6 +1807,8 @@
         stopFadeLoop();
         clearStorm();
         deactivateFire();
+        currentWordStreak = 0;
+        currentWordHadError = true;
         isGameOver = true;
         isFinished = true;
         clearInterval(timerInterval);
@@ -1250,12 +1837,6 @@
         // Show results after a short delay
         setTimeout(() => {
             showSection('results');
-            checkAchievements({
-                wpm: wpm,
-                accuracy: accuracy,
-                isGameOver: true,
-                isGhostOver: false
-            });
         }, 450);
     }
 
@@ -1277,7 +1858,9 @@
         clearDeadzone();
         clearInterval(timerInterval);
         clearCountdown();
-        document.body.classList.remove('survival-active', 'fade-active', 'storm-active', 'deadzone-active');
+        document.body.classList.remove('survival-active', 'fade-active', 'storm-active', 'deadzone-active', 'practice-active');
+        if (practiceModeBanner) practiceModeBanner.classList.add('hidden');
+        hideAntiCheatWarning();
         resultsCard.classList.remove('game-over-state', 'ghost-over-state');
         textInput.value = '';
         showSection('setup');

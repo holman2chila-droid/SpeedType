@@ -1725,14 +1725,396 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 /* ===================================================
-   4. MÓDULO: SISTEMA DE LOGROS (ACHIEVEMENTS TOASTS)
+   4. MÓDULO: SISTEMA DE LOGROS (ACHIEVEMENTS SYSTEM & MODAL)
    =================================================== */
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.achievements-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all var(--transition-normal);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.achievements-toggle-btn svg {
+    color: #ffd166;
+    filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.4));
+    transition: transform var(--transition-fast);
+}
+
+.achievements-toggle-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.achievements-toggle-btn:hover svg {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.achievements-badge-count {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* Modal Overlay */
+.achievements-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(8, 8, 16, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.achievements-modal-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Modal Panel */
+.achievements-panel {
+    width: 100%;
+    max-width: 860px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 28px;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 35px var(--accent-glow);
+    animation: modal-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    overflow: hidden;
+}
+
+@keyframes modal-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.achievements-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.achievements-title-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.achievements-icon-main {
+    font-size: 2.2rem;
+    filter: drop-shadow(0 0 10px rgba(255, 209, 102, 0.5));
+    animation: icon-bounce 1.5s infinite alternate ease-in-out;
+}
+
+.achievements-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.achievements-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 2px 0 0 0;
+}
+
+.achievements-close-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.achievements-close-btn:hover {
+    background: rgba(255, 85, 119, 0.15);
+    border-color: var(--color-error);
+    color: var(--color-error);
+    transform: rotate(90deg);
+}
+
+/* Summary & Progress */
+.achievements-summary {
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.achievements-progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.achievements-progress-label {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.achievements-progress-score {
+    color: var(--accent-secondary);
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.achievements-bar-container {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.achievements-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    box-shadow: 0 0 12px var(--accent-secondary-glow);
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Category Filters */
+.achievements-categories {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 0 14px 0;
+    scrollbar-width: none;
+}
+
+.achievements-categories::-webkit-scrollbar {
+    display: none;
+}
+
+.ach-cat-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.ach-cat-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+    background: var(--bg-card-hover);
+}
+
+.ach-cat-btn.active {
+    background: linear-gradient(135deg, var(--accent-primary), rgba(124, 92, 252, 0.7));
+    color: #ffffff;
+    border-color: var(--accent-primary-hover);
+    box-shadow: 0 2px 10px var(--accent-glow);
+}
+
+/* Achievements Grid */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+    overflow-y: auto;
+    padding: 6px 4px 10px 4px;
+    margin-top: 4px;
+    max-height: 52vh;
+}
+
+.achievements-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.achievements-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.achievements-grid::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.achievements-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* Achievement Item Card */
+.ach-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all var(--transition-normal);
+    min-height: 140px;
+}
+
+.ach-card.ach-locked {
+    opacity: 0.58;
+    filter: grayscale(0.9);
+    border-style: dashed;
+    background: rgba(18, 18, 30, 0.4);
+}
+
+.ach-card.ach-locked:hover {
+    opacity: 0.75;
+    transform: translateY(-2px);
+    border-color: var(--text-muted);
+}
+
+.ach-card.ach-unlocked {
+    opacity: 1;
+    filter: none;
+    border-color: rgba(92, 224, 216, 0.35);
+    background: linear-gradient(145deg, rgba(25, 25, 45, 0.85), rgba(20, 30, 45, 0.7));
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), 0 0 12px rgba(92, 224, 216, 0.12);
+}
+
+.ach-card.ach-unlocked:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-secondary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 20px var(--accent-secondary-glow);
+}
+
+.ach-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.ach-card-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
+.ach-status-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ach-unlocked .ach-status-badge {
+    background: rgba(34, 197, 94, 0.18);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
+}
+
+.ach-locked .ach-status-badge {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ach-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.ach-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin-bottom: 12px;
+}
+
+.ach-card-date {
+    margin-top: auto;
+    font-size: 0.72rem;
+    color: var(--accent-secondary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ach-card-date svg {
+    color: #4ade80;
+}
+
+/* Toast Container & Toasts */
 .achievement-container {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    z-index: 1000;
+    z-index: 10000;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1744,17 +2126,17 @@ body.deadzone-active .glass-card.typing-card {
     display: flex;
     align-items: center;
     gap: 14px;
-    background: rgba(18, 18, 30, 0.88);
-    border: 1px solid rgba(255, 215, 0, 0.4);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 215, 0, 0.2);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 209, 102, 0.45);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 209, 102, 0.22);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border-radius: var(--radius-md);
     padding: 14px 20px;
-    min-width: 290px;
-    max-width: 380px;
-    animation: toast-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    min-width: 300px;
+    max-width: 390px;
+    animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: all 0.4s ease;
 }
 
 .achievement-toast.toast-hiding {
@@ -1784,15 +2166,15 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .achievement-icon {
-    font-size: 2rem;
+    font-size: 2.1rem;
     line-height: 1;
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+    filter: drop-shadow(0 0 10px rgba(255, 209, 102, 0.6));
     animation: icon-bounce 1s infinite alternate ease-in-out;
 }
 
 @keyframes icon-bounce {
     0% { transform: translateY(0); }
-    100% { transform: translateY(-3px); }
+    100% { transform: translateY(-4px); }
 }
 
 .achievement-text {
@@ -1802,20 +2184,156 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .achievement-badge {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #ffd700;
+    color: #ffd166;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .achievement-title {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .achievement-desc {
     font-size: 0.8rem;
     color: var(--text-secondary);
+}
+
+/* ===================================================
+   5. MÓDULO: SISTEMA ANTITRAMPAS & MODO PRÁCTICA
+   =================================================== */
+
+@keyframes shake-anim {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+}
+
+.shake-error {
+    animation: shake-anim 0.45s ease-in-out !important;
+}
+
+.text-input.has-anticheat-error {
+    border-color: #ff5577 !important;
+    box-shadow: 0 0 20px rgba(255, 85, 119, 0.35) !important;
+}
+
+.anticheat-warning {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: rgba(255, 85, 119, 0.12);
+    border: 1px solid rgba(255, 85, 119, 0.45);
+    box-shadow: 0 6px 24px rgba(255, 85, 119, 0.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    margin-top: 10px;
+    animation: warning-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anticheat-warning.hidden {
+    display: none;
+}
+
+@keyframes warning-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.anticheat-warning-icon {
+    font-size: 1.7rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(255, 85, 119, 0.6));
+}
+
+.anticheat-warning-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.anticheat-warning-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #ff708f;
+    letter-spacing: -0.01em;
+}
+
+.anticheat-warning-desc {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    line-height: 1.35;
+    opacity: 0.9;
+}
+
+.btn-practice-start {
+    background: rgba(255, 209, 102, 0.15);
+    border: 1px solid rgba(255, 209, 102, 0.45);
+    color: #ffd166;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 8px 15px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-practice-start:hover {
+    background: rgba(255, 209, 102, 0.28);
+    border-color: #ffd166;
+    transform: translateY(-1px);
+    box-shadow: 0 0 14px rgba(255, 209, 102, 0.4);
+}
+
+/* Practice Mode Banner in Typing Section */
+.practice-mode-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(255, 209, 102, 0.12);
+    border: 1px solid rgba(255, 209, 102, 0.4);
+    box-shadow: 0 4px 18px rgba(255, 209, 102, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: var(--radius-md);
+    padding: 10px 18px;
+    margin-bottom: 16px;
+    color: #ffd166;
+    font-size: 0.85rem;
+    font-weight: 500;
+    animation: practice-pulse 3s infinite ease-in-out;
+}
+
+@keyframes practice-pulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(255, 209, 102, 0.1); }
+    50% { box-shadow: 0 4px 22px rgba(255, 209, 102, 0.25); }
+}
+
+.practice-mode-banner.hidden {
+    display: none;
+}
+
+.practice-banner-icon {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 4px rgba(255, 209, 102, 0.6));
 }

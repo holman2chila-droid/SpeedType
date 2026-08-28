@@ -29,37 +29,52 @@
                     <span class="logo-text">Speed<span class="logo-accent">Type</span></span>
                 </div>
 
-                <!-- Theme Menu -->
-                <div class="theme-menu" id="theme-menu">
-                    <button class="theme-toggle-btn" id="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M12 2a7 7 0 0 0 0 14 5 5 0 0 1 0 -10 3 3 0 0 0 0 6"></path>
+                <div class="header-actions">
+                    <!-- Achievements Button -->
+                    <button class="achievements-toggle-btn" id="achievements-toggle" aria-label="Ver logros" title="Ver logros">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                            <path d="M4 22h16"></path>
+                            <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path>
+                            <path d="M6 4h12a2 2 0 0 1 2 2v3a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6V6a2 2 0 0 1 2-2z"></path>
                         </svg>
+                        <span>Logros</span>
+                        <span class="achievements-badge-count" id="achievements-badge-count">0/17</span>
                     </button>
-                    <div class="theme-dropdown hidden" id="theme-dropdown">
-                        <span class="theme-dropdown-title">Temas</span>
-                        <div class="theme-options">
-                            <button class="theme-option" data-theme="dark">
-                                <span class="theme-swatch" style="background: linear-gradient(135deg, #14141f, #7c5cfc)"></span>
-                                <span>Oscuro</span>
-                            </button>
-                            <button class="theme-option" data-theme="light">
-                                <span class="theme-swatch" style="background: linear-gradient(135deg, #f0eff5, #8b7bd4)"></span>
-                                <span>Claro</span>
-                            </button>
-                            <button class="theme-option" data-theme="violet">
-                                <span class="theme-swatch" style="background: linear-gradient(135deg, #1e1530, #a78bfa)"></span>
-                                <span>Violeta</span>
-                            </button>
-                            <button class="theme-option" data-theme="rose">
-                                <span class="theme-swatch" style="background: linear-gradient(135deg, #1e1418, #d4979e)"></span>
-                                <span>Rosa</span>
-                            </button>
-                            <button class="theme-option" data-theme="green">
-                                <span class="theme-swatch" style="background: linear-gradient(135deg, #111e16, #7cc8a0)"></span>
-                                <span>Verde</span>
-                            </button>
+
+                    <!-- Theme Menu -->
+                    <div class="theme-menu" id="theme-menu">
+                        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 2a7 7 0 0 0 0 14 5 5 0 0 1 0 -10 3 3 0 0 0 0 6"></path>
+                            </svg>
+                        </button>
+                        <div class="theme-dropdown hidden" id="theme-dropdown">
+                            <span class="theme-dropdown-title">Temas</span>
+                            <div class="theme-options">
+                                <button class="theme-option" data-theme="dark">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #14141f, #7c5cfc)"></span>
+                                    <span>Oscuro</span>
+                                </button>
+                                <button class="theme-option" data-theme="light">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #f0eff5, #8b7bd4)"></span>
+                                    <span>Claro</span>
+                                </button>
+                                <button class="theme-option" data-theme="violet">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #1e1530, #a78bfa)"></span>
+                                    <span>Violeta</span>
+                                </button>
+                                <button class="theme-option" data-theme="rose">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #1e1418, #d4979e)"></span>
+                                    <span>Rosa</span>
+                                </button>
+                                <button class="theme-option" data-theme="green">
+                                    <span class="theme-swatch" style="background: linear-gradient(135deg, #111e16, #7cc8a0)"></span>
+                                    <span>Verde</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -82,6 +97,18 @@
                 <p class="card-description">Escribe o pega el texto que quieres practicar. Presiona <kbd>Enter</kbd> o el botón para comenzar.</p>
                 <textarea id="text-input" class="text-input" placeholder="Pega aquí tu texto o selecciona una categoría abajo para comenzar..." rows="3"></textarea>
                 
+                <!-- Anti-Cheat Warning Feedback -->
+                <div id="anticheat-warning" class="anticheat-warning hidden">
+                    <div class="anticheat-warning-icon">⚠️</div>
+                    <div class="anticheat-warning-body">
+                        <span class="anticheat-warning-title">Texto no válido para logros</span>
+                        <span id="anticheat-warning-desc" class="anticheat-warning-desc">Asegúrate de usar un texto real con palabras variadas.</span>
+                    </div>
+                    <button type="button" class="btn-practice-start" id="btn-practice-start" title="Jugar sin registro de logros">
+                        Modo Práctica
+                    </button>
+                </div>
+
                 <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px;">
                     <button id="start-btn" class="btn btn-primary" style="margin: 0 auto; width: auto; padding: 0 24px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -164,9 +191,13 @@
                                     <span class="diff-tag">Medio</span>
                                     <span class="diff-val fade-val">40 WPM</span>
                                 </button>
-                                <button type="button" class="btn-diff btn-speed diff-hardcore" data-wpm="60">
+                                <button type="button" class="btn-diff btn-speed" data-wpm="60">
                                     <span class="diff-tag">Rápido</span>
                                     <span class="diff-val fade-val">60 WPM</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-speed diff-hardcore" data-wpm="80">
+                                    <span class="diff-tag">Pro</span>
+                                    <span class="diff-val fade-val">80 WPM</span>
                                 </button>
                             </div>
                         </div>
@@ -242,6 +273,12 @@
             <div id="deadzone-banner" class="deadzone-banner hidden">
                 <span class="deadzone-banner-icon">⚠️</span>
                 <span id="deadzone-banner-text">¡Teclas <span id="deadzone-keys" class="deadzone-keys"></span> rotas! Usa <kbd>[Espacio]</kbd> para saltarlas.</span>
+            </div>
+
+            <!-- Practice Mode Banner (Anti-Cheat) -->
+            <div id="practice-mode-banner" class="practice-mode-banner hidden">
+                <span class="practice-banner-icon">⚠️</span>
+                <span id="practice-banner-text"><strong>Modo Práctica:</strong> Logros desactivados para este texto.</span>
             </div>
 
             <!-- Stats Bar -->
@@ -373,6 +410,53 @@
                 </div>
             </div>
         </section>
+    </div>
+
+    <!-- Achievements Modal / Panel -->
+    <div id="achievements-modal" class="achievements-modal-overlay hidden">
+        <div class="achievements-panel glass-card">
+            <div class="achievements-header">
+                <div class="achievements-title-group">
+                    <div class="achievements-icon-main">🏆</div>
+                    <div>
+                        <h2 class="achievements-title">Salón de Logros</h2>
+                        <p class="achievements-subtitle">Progreso y retos de mecanografía</p>
+                    </div>
+                </div>
+                <button class="achievements-close-btn" id="achievements-close" aria-label="Cerrar modal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Global Progress Bar -->
+            <div class="achievements-summary">
+                <div class="achievements-progress-info">
+                    <span class="achievements-progress-label">Progreso Total</span>
+                    <span class="achievements-progress-score" id="achievements-progress-score">0 / 17 (0%)</span>
+                </div>
+                <div class="achievements-bar-container">
+                    <div class="achievements-bar-fill" id="achievements-bar-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="achievements-categories" id="achievements-categories">
+                <button class="ach-cat-btn active" data-category="all">Todos</button>
+                <button class="ach-cat-btn" data-category="rachas">🔥 Rachas</button>
+                <button class="ach-cat-btn" data-category="velocidad">⚡ Velocidad</button>
+                <button class="ach-cat-btn" data-category="precision">🎯 Precisión</button>
+                <button class="ach-cat-btn" data-category="vidas">❤️ Supervivencia</button>
+                <button class="ach-cat-btn" data-category="persistencia">👑 Persistencia</button>
+            </div>
+
+            <!-- Achievements Grid -->
+            <div class="achievements-grid" id="achievements-grid">
+                <!-- Dynamically rendered via JS -->
+            </div>
+        </div>
     </div>
 
     <!-- Achievement Toast Container -->
