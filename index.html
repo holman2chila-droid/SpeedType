@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedType — Test de Velocidad de Mecanografía</title>
+    <meta name="description" content="Mide tu velocidad de escritura en palabras por minuto (WPM). Pega tu texto, escribe y mejora tu mecanografía.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                    </div>
+                    <span class="logo-text">Speed<span class="logo-accent">Type</span></span>
+                </div>
+
+                <!-- Theme Menu -->
+                <div class="theme-menu" id="theme-menu">
+                    <button class="theme-toggle-btn" id="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 2a7 7 0 0 0 0 14 5 5 0 0 1 0 -10 3 3 0 0 0 0 6"></path>
+                        </svg>
+                    </button>
+                    <div class="theme-dropdown hidden" id="theme-dropdown">
+                        <span class="theme-dropdown-title">Temas</span>
+                        <div class="theme-options">
+                            <button class="theme-option" data-theme="dark">
+                                <span class="theme-swatch" style="background: linear-gradient(135deg, #14141f, #7c5cfc)"></span>
+                                <span>Oscuro</span>
+                            </button>
+                            <button class="theme-option" data-theme="light">
+                                <span class="theme-swatch" style="background: linear-gradient(135deg, #f0eff5, #8b7bd4)"></span>
+                                <span>Claro</span>
+                            </button>
+                            <button class="theme-option" data-theme="violet">
+                                <span class="theme-swatch" style="background: linear-gradient(135deg, #1e1530, #a78bfa)"></span>
+                                <span>Violeta</span>
+                            </button>
+                            <button class="theme-option" data-theme="rose">
+                                <span class="theme-swatch" style="background: linear-gradient(135deg, #1e1418, #d4979e)"></span>
+                                <span>Rosa</span>
+                            </button>
+                            <button class="theme-option" data-theme="green">
+                                <span class="theme-swatch" style="background: linear-gradient(135deg, #111e16, #7cc8a0)"></span>
+                                <span>Verde</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="tagline">Mide y mejora tu velocidad de escritura</p>
+        </header>
+
+        <!-- Setup Phase -->
+        <section id="setup-section" class="section setup-section">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </div>
+                    <h2>Pega tu texto</h2>
+                </div>
+                <p class="card-description">Escribe o pega el texto que quieres practicar. Presiona <kbd>Enter</kbd> o el botón para comenzar.</p>
+                <textarea id="text-input" class="text-input" placeholder="Pega aquí tu texto o selecciona una categoría abajo para comenzar..." rows="3"></textarea>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px;">
+                    <button id="start-btn" class="btn btn-primary" style="margin: 0 auto; width: auto; padding: 0 24px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Comenzar prueba
+                    </button>
+
+                    <div class="random-text-container">
+                        <p class="random-text-title">¿No tienes texto? Selecciona una categoría:</p>
+                        <div class="random-buttons">
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-short">Corto</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-noaccent">Sin tildes</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-learn">Aprende</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-philosophy">Filosofía</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-romance">Romance</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-sayings">Dichos y Refranes</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-classic">Cuento clásico</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-rand-long">Largo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typing Phase -->
+        <section id="typing-section" class="section typing-section hidden">
+            <!-- Countdown Overlay -->
+            <div id="countdown-overlay" class="countdown-overlay hidden">
+                <div class="countdown-content">
+                    <span id="countdown-number" class="countdown-number">3</span>
+                    <span id="countdown-label" class="countdown-label">¡Prepárate!</span>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-card glass-card-mini">
+                    <span class="stat-label">WPM</span>
+                    <span id="wpm-display" class="stat-value">0</span>
+                </div>
+                <div class="stat-card glass-card-mini">
+                    <span class="stat-label">Precisión</span>
+                    <span id="accuracy-display" class="stat-value">100<small>%</small></span>
+                </div>
+                <div class="stat-card glass-card-mini">
+                    <span class="stat-label">Tiempo</span>
+                    <span id="time-display" class="stat-value">0:00</span>
+                </div>
+                <div class="stat-card glass-card-mini">
+                    <span class="stat-label">Errores</span>
+                    <span id="errors-display" class="stat-value error-color">0</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-wrapper">
+                <div class="progress-bar-container">
+                    <div id="progress-bar" class="progress-bar-fill"></div>
+                </div>
+                <span id="progress-text" class="progress-text">0%</span>
+            </div>
+
+            <!-- Text Display -->
+            <div class="card glass-card typing-card">
+                <div id="text-display" class="text-display"></div>
+            </div>
+
+            <!-- Typing Input -->
+            <div class="typing-input-wrapper">
+                <input id="typing-input" class="typing-input" type="text" placeholder="Empieza a escribir aquí..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            </div>
+
+            <!-- Hint -->
+            <p class="typing-hint" id="typing-hint">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Si cometes un error, usa <kbd>Backspace</kbd> para borrar y corregir
+            </p>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="restart-btn" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Reiniciar
+                </button>
+                <button id="new-text-btn" class="btn btn-ghost">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Nuevo texto
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Phase -->
+        <section id="results-section" class="section results-section hidden">
+            <div class="card glass-card results-card">
+                <div class="results-badge">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="7"></circle>
+                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                    </svg>
+                </div>
+                <h2 class="results-title">¡Prueba completada!</h2>
+                <p class="results-subtitle">Aquí están tus resultados</p>
+
+                <div class="results-grid">
+                    <div class="result-item result-highlight">
+                        <span class="result-number" id="result-wpm">0</span>
+                        <span class="result-label">WPM</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-number" id="result-accuracy">0%</span>
+                        <span class="result-label">Precisión</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-number" id="result-time">0:00</span>
+                        <span class="result-label">Tiempo total</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-number" id="result-errors">0</span>
+                        <span class="result-label">Errores totales</span>
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <button id="results-restart-btn" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        Repetir prueba
+                    </button>
+                    <button id="results-new-btn" class="btn btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Nuevo texto
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script src="texts.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
