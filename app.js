@@ -1,4 +1,4 @@
-// ===== SpeedType — Typing Speed Test App =====
+// ===== ISpeedType — Typing Speed Test App =====
 
 (function () {
     'use strict';
@@ -533,11 +533,18 @@
             void textInput.offsetWidth; // Force CSS reflow to re-trigger shake animation
             textInput.classList.add('shake-error', 'has-anticheat-error');
         }
+        if (startBtn) {
+            startBtn.classList.remove('shake-error');
+            void startBtn.offsetWidth;
+            startBtn.classList.add('shake-error');
+        }
         if (anticheatWarningDesc) {
             anticheatWarningDesc.textContent = reason || 'Asegúrate de usar un texto real con palabras variadas.';
         }
         if (anticheatWarning) {
-            anticheatWarning.classList.remove('hidden');
+            anticheatWarning.classList.remove('hidden', 'shake-error');
+            void anticheatWarning.offsetWidth;
+            anticheatWarning.classList.add('shake-error');
         }
     }
 
@@ -545,7 +552,11 @@
         if (textInput) {
             textInput.classList.remove('has-anticheat-error', 'shake-error');
         }
+        if (startBtn) {
+            startBtn.classList.remove('shake-error');
+        }
         if (anticheatWarning) {
+            anticheatWarning.classList.remove('shake-error');
             anticheatWarning.classList.add('hidden');
         }
     }
@@ -588,9 +599,8 @@
             hideAntiCheatWarning();
             startTest();
         } else {
-            // Rechazar y mostrar retroalimentación con opción a Modo Práctica
+            // Rechazar y mostrar retroalimentación estética con vibración/shake sin spam de toasts de logros
             showAntiCheatWarning(validation.reason);
-            showAchievementToast('⚠️', 'Texto No Válido para Logros', validation.reason);
         }
     }
 
