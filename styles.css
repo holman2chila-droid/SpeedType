@@ -1642,6 +1642,31 @@ body.fade-active .typing-input:focus {
     box-shadow: 0 0 8px #f59e0b;
 }
 
+/* Botones de dificultad para Caos (Tormenta) */
+.btn-storm-diff.active {
+    border-color: #f59e0b !important;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.05)) !important;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.3) !important;
+    color: var(--text-primary) !important;
+}
+
+.btn-storm-diff.active.diff-hardcore {
+    border-color: #d97706 !important;
+    box-shadow: 0 0 18px rgba(217, 119, 6, 0.5) !important;
+}
+
+.btn-storm-diff:hover {
+    border-color: rgba(245, 158, 11, 0.45) !important;
+    background: rgba(245, 158, 11, 0.06) !important;
+    color: var(--text-primary) !important;
+}
+
+.storm-val {
+    color: #f59e0b;
+    opacity: 0.9;
+    font-size: 0.72rem;
+}
+
 /* Carácter caotizado por la tormenta — Nítido, legible y sin exceso fosforescente */
 .char.char-scrambled {
     color: #f59e0b !important;
@@ -1676,6 +1701,30 @@ body.storm-active .glass-card.typing-card {
 .switch-toggle input:checked + .slider.slider-deadzone::before {
     background-color: #c084fc;
     box-shadow: 0 0 10px #c084fc;
+}
+
+/* Botones de dificultad para Punto Muerto (Deadzone) */
+.btn-deadzone-diff.active {
+    border-color: #c084fc !important;
+    background: linear-gradient(135deg, rgba(192, 132, 252, 0.2), rgba(192, 132, 252, 0.05)) !important;
+    box-shadow: 0 0 14px rgba(192, 132, 252, 0.35) !important;
+    color: var(--text-primary) !important;
+}
+
+.btn-deadzone-diff.active.diff-hardcore {
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.5) !important;
+}
+
+.btn-deadzone-diff:hover {
+    border-color: rgba(192, 132, 252, 0.5) !important;
+    background: rgba(192, 132, 252, 0.08) !important;
+    color: var(--text-primary) !important;
+}
+
+.deadzone-val {
+    color: #c084fc;
+    opacity: 0.9;
 }
 
 /* Banner de Dead Zone */
@@ -1788,7 +1837,7 @@ body.deadzone-active .glass-card.typing-card {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(8, 8, 16, 0.78);
+    background: rgba(10, 10, 20, 0.65);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     z-index: 9999;
@@ -1816,9 +1865,9 @@ body.deadzone-active .glass-card.typing-card {
     flex-direction: column;
     padding: 28px;
     border-radius: var(--radius-lg);
-    background: var(--bg-card);
+    background: var(--bg-card-hover);
     border: 1px solid var(--border-color);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 35px var(--accent-glow);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 30px var(--accent-glow);
     animation: modal-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     overflow: hidden;
 }
@@ -1869,7 +1918,7 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .achievements-close-btn {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     width: 36px;
@@ -1883,7 +1932,7 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .achievements-close-btn:hover {
-    background: rgba(255, 85, 119, 0.15);
+    background: var(--color-error-bg);
     border-color: var(--color-error);
     color: var(--color-error);
     transform: rotate(90deg);
@@ -1913,7 +1962,7 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .achievements-progress-score {
-    color: var(--accent-secondary);
+    color: var(--accent-primary);
     font-family: var(--font-mono);
     font-weight: 700;
 }
@@ -1921,7 +1970,7 @@ body.deadzone-active .glass-card.typing-card {
 .achievements-bar-container {
     width: 100%;
     height: 10px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--bg-secondary);
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid var(--border-color);
@@ -1970,7 +2019,7 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .ach-cat-btn.active {
-    background: linear-gradient(135deg, var(--accent-primary), rgba(124, 92, 252, 0.7));
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
     color: #ffffff;
     border-color: var(--accent-primary-hover);
     box-shadow: 0 2px 10px var(--accent-glow);
@@ -1992,12 +2041,12 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .achievements-grid::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-secondary);
     border-radius: 4px;
 }
 
 .achievements-grid::-webkit-scrollbar-thumb {
-    background: var(--border-color);
+    background: var(--border-color-hover);
     border-radius: 4px;
 }
 
@@ -2007,7 +2056,7 @@ body.deadzone-active .glass-card.typing-card {
 
 /* Achievement Item Card */
 .ach-card {
-    background: var(--bg-input);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 16px;
@@ -2019,14 +2068,14 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .ach-card.ach-locked {
-    opacity: 0.58;
-    filter: grayscale(0.9);
+    opacity: 0.65;
+    filter: grayscale(0.8);
     border-style: dashed;
-    background: rgba(18, 18, 30, 0.4);
+    background: var(--bg-secondary);
 }
 
 .ach-card.ach-locked:hover {
-    opacity: 0.75;
+    opacity: 0.85;
     transform: translateY(-2px);
     border-color: var(--text-muted);
 }
@@ -2034,15 +2083,15 @@ body.deadzone-active .glass-card.typing-card {
 .ach-card.ach-unlocked {
     opacity: 1;
     filter: none;
-    border-color: rgba(92, 224, 216, 0.35);
-    background: linear-gradient(145deg, rgba(25, 25, 45, 0.85), rgba(20, 30, 45, 0.7));
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), 0 0 12px rgba(92, 224, 216, 0.12);
+    border-color: var(--accent-secondary);
+    background: var(--bg-card-hover);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08), 0 0 12px var(--accent-secondary-glow);
 }
 
 .ach-card.ach-unlocked:hover {
     transform: translateY(-3px);
-    border-color: var(--accent-secondary);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 20px var(--accent-secondary-glow);
+    border-color: var(--accent-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 20px var(--accent-glow);
 }
 
 .ach-card-top {
@@ -2055,7 +2104,7 @@ body.deadzone-active .glass-card.typing-card {
 .ach-card-icon {
     font-size: 1.8rem;
     line-height: 1;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
 }
 
 .ach-status-badge {
@@ -2069,16 +2118,24 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .ach-unlocked .ach-status-badge {
-    background: rgba(34, 197, 94, 0.18);
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.15);
+}
+
+[data-theme="dark"] .ach-unlocked .ach-status-badge,
+[data-theme="violet"] .ach-unlocked .ach-status-badge,
+[data-theme="rose"] .ach-unlocked .ach-status-badge,
+[data-theme="green"] .ach-unlocked .ach-status-badge {
     color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.4);
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
+    background: rgba(34, 197, 94, 0.2);
 }
 
 .ach-locked .ach-status-badge {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-input);
     color: var(--text-muted);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
 }
 
 .ach-card-title {
@@ -2098,7 +2155,7 @@ body.deadzone-active .glass-card.typing-card {
 .ach-card-date {
     margin-top: auto;
     font-size: 0.72rem;
-    color: var(--accent-secondary);
+    color: var(--accent-primary);
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -2106,6 +2163,13 @@ body.deadzone-active .glass-card.typing-card {
 }
 
 .ach-card-date svg {
+    color: #16a34a;
+}
+
+[data-theme="dark"] .ach-card-date svg,
+[data-theme="violet"] .ach-card-date svg,
+[data-theme="rose"] .ach-card-date svg,
+[data-theme="green"] .ach-card-date svg {
     color: #4ade80;
 }
 

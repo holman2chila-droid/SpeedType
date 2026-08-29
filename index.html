@@ -232,7 +232,7 @@
                         </div>
                     </div>
 
-                    <!-- Modo Tormenta Eléctrica (Caos) Switch -->
+                    <!-- Modo Tormenta Eléctrica (Caos) Switch & Dificultad -->
                     <div class="survival-mode-card storm-mode-card">
                         <div class="survival-toggle-row">
                             <div class="survival-info">
@@ -249,9 +249,32 @@
                                 <span class="slider slider-storm round"></span>
                             </label>
                         </div>
+
+                        <!-- Selector de intensidad de tormenta animado -->
+                        <div class="difficulty-wrapper hidden" id="storm-diff-wrapper">
+                            <span class="difficulty-label">Intensidad del Caos:</span>
+                            <div class="difficulty-options storm-diff-options">
+                                <button type="button" class="btn-diff btn-storm-diff" data-interval="5000" data-count="1">
+                                    <span class="diff-tag">Fácil</span>
+                                    <span class="diff-val storm-val">1 letra / 5s</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-storm-diff active" data-interval="4000" data-count="2">
+                                    <span class="diff-tag">Medio</span>
+                                    <span class="diff-val storm-val">2 letras / 4s</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-storm-diff" data-interval="2500" data-count="3">
+                                    <span class="diff-tag">Pro</span>
+                                    <span class="diff-val storm-val">3 letras / 2.5s</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-storm-diff diff-hardcore" data-interval="1500" data-count="4">
+                                    <span class="diff-tag">Hardcore</span>
+                                    <span class="diff-val storm-val">4 letras / 1.5s</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Punto Muerto (Dead Zone) Switch -->
+                    <!-- Punto Muerto (Dead Zone) Switch & Selector de Teclas -->
                     <div class="survival-mode-card deadzone-mode-card">
                         <div class="survival-toggle-row">
                             <div class="survival-info">
@@ -262,12 +285,35 @@
                                     </svg>
                                     Punto Muerto (Dead Zone)
                                 </span>
-                                <span class="survival-subtitle">3 teclas del texto se "rompen": ¡debes saltarlas con [Espacio]! 🚫</span>
+                                <span class="survival-subtitle">Las teclas del texto se "rompen": ¡debes saltarlas con [Espacio]! 🚫</span>
                             </div>
                             <label class="switch-toggle" for="deadzone-mode-switch">
                                 <input type="checkbox" id="deadzone-mode-switch">
                                 <span class="slider slider-deadzone round"></span>
                             </label>
+                        </div>
+
+                        <!-- Selector de cantidad de teclas rotas -->
+                        <div class="difficulty-wrapper hidden" id="deadzone-diff-wrapper">
+                            <span class="difficulty-label">Teclas rotas a esquivar:</span>
+                            <div class="difficulty-options deadzone-diff-options">
+                                <button type="button" class="btn-diff btn-deadzone-diff" data-keys="2">
+                                    <span class="diff-tag">Fácil</span>
+                                    <span class="diff-val deadzone-val">2 teclas</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-deadzone-diff active" data-keys="3">
+                                    <span class="diff-tag">Medio</span>
+                                    <span class="diff-val deadzone-val">3 teclas</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-deadzone-diff" data-keys="4">
+                                    <span class="diff-tag">Pro</span>
+                                    <span class="diff-val deadzone-val">4 teclas</span>
+                                </button>
+                                <button type="button" class="btn-diff btn-deadzone-diff diff-hardcore" data-keys="5">
+                                    <span class="diff-tag">Hardcore</span>
+                                    <span class="diff-val deadzone-val">5 teclas</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 

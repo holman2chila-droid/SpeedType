@@ -55,7 +55,7 @@
     // Lives Mode DOM elements
     const livesModeSwitch = document.getElementById('lives-mode-switch');
     const difficultyWrapper = document.getElementById('difficulty-wrapper');
-    const diffButtons = document.querySelectorAll('.btn-diff');
+    const diffButtons = document.querySelectorAll('#difficulty-wrapper .btn-diff');
     const statsBar = document.getElementById('stats-bar');
     const livesStatCard = document.getElementById('lives-stat-card');
     const livesCountDisplay = document.getElementById('lives-count');
@@ -76,9 +76,13 @@
 
     // Storm Mode DOM elements
     const stormModeSwitch = document.getElementById('storm-mode-switch');
+    const stormDiffWrapper = document.getElementById('storm-diff-wrapper');
+    const stormDiffButtons = document.querySelectorAll('.btn-storm-diff');
 
     // Dead Zone DOM elements
     const deadzoneModeSwitch = document.getElementById('deadzone-mode-switch');
+    const deadzoneDiffWrapper = document.getElementById('deadzone-diff-wrapper');
+    const deadzoneDiffButtons = document.querySelectorAll('.btn-deadzone-diff');
     const deadzoneBanner = document.getElementById('deadzone-banner');
     const deadzoneKeysDisplay = document.getElementById('deadzone-keys');
 
@@ -160,11 +164,14 @@
     // ===== Storm Mode State =====
     let isStormMode = false;
     let stormInterval = null;
+    let stormIntervalMs = 4000;         // Milisegundos entre cada impacto de tormenta
+    let stormCharCount = 2;             // Cantidad de letras transformadas por impacto
     let scrambledPositions = new Set(); // Conjunto de índices que han sido transformados
 
     // ===== Dead Zone State =====
     let isDeadzoneMode = false;
-    let deadKeys = [];                  // 3 teclas rotas
+    let deadKeysCount = 3;              // Cantidad de teclas rotas a sortear (2 a 5)
+    let deadKeys = [];                  // Teclas rotas asignadas para la partida
 
     // ===== Theme State =====
     let currentTheme = localStorage.getItem('speedtype-theme') || 'dark';
@@ -264,7 +271,7 @@
             isStormMode = false;
             isDeadzoneMode = false;
 
-            // Desmarcar otros switches y ocultar sus selectores
+            // Desmarcar otros switches y ocultar sus selectores si no es el modo actual
             if (modeName !== 'lives') {
                 if (livesModeSwitch) livesModeSwitch.checked = false;
                 if (difficultyWrapper) difficultyWrapper.classList.add('hidden');
@@ -275,12 +282,14 @@
             }
             if (modeName !== 'storm') {
                 if (stormModeSwitch) stormModeSwitch.checked = false;
+                if (stormDiffWrapper) stormDiffWrapper.classList.add('hidden');
             }
             if (modeName !== 'deadzone') {
                 if (deadzoneModeSwitch) deadzoneModeSwitch.checked = false;
+                if (deadzoneDiffWrapper) deadzoneDiffWrapper.classList.add('hidden');
             }
 
-            // Activar el modo seleccionado si fue marcado
+            // Activar el modo seleccionado si fue marcado, o esconder su propio selector si se apagó
             if (isChecked) {
                 if (modeName === 'lives') {
                     isLivesMode = true;
@@ -290,8 +299,21 @@
                     if (fadeSpeedWrapper) fadeSpeedWrapper.classList.remove('hidden');
                 } else if (modeName === 'storm') {
                     isStormMode = true;
+                    if (stormDiffWrapper) stormDiffWrapper.classList.remove('hidden');
                 } else if (modeName === 'deadzone') {
                     isDeadzoneMode = true;
+                    if (deadzoneDiffWrapper) deadzoneDiffWrapper.classList.remove('hidden');
+                }
+            } else {
+                // Si el switch del propio modo se apagó, esconder su selector
+                if (modeName === 'lives' && difficultyWrapper) {
+                    difficultyWrapper.classList.add('hidden');
+                } else if (modeName === 'fade' && fadeSpeedWrapper) {
+                    fadeSpeedWrapper.classList.add('hidden');
+                } else if (modeName === 'storm' && stormDiffWrapper) {
+                    stormDiffWrapper.classList.add('hidden');
+                } else if (modeName === 'deadzone' && deadzoneDiffWrapper) {
+                    deadzoneDiffWrapper.classList.add('hidden');
                 }
             }
         }
@@ -326,9 +348,26 @@
             stormModeSwitch.addEventListener('change', (e) => setExclusiveMode('storm', e.target.checked));
         }
 
+        stormDiffButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                stormDiffButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                stormIntervalMs = parseInt(btn.dataset.interval, 10) || 4000;
+                stormCharCount = parseInt(btn.dataset.count, 10) || 2;
+            });
+        });
+
         if (deadzoneModeSwitch) {
             deadzoneModeSwitch.addEventListener('change', (e) => setExclusiveMode('deadzone', e.target.checked));
         }
+
+        deadzoneDiffButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                deadzoneDiffButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                deadKeysCount = parseInt(btn.dataset.keys, 10) || 3;
+            });
+        });
 
         // --- Sistema de Logros: Inicialización & Eventos de Modal ---
         loadAchievementsFromStorage();
@@ -1258,7 +1297,15 @@
     // ===== STORM MODE HELPERS =====
     function startStormLoop() {
         clearStorm();
-        stormInterval = setInterval(scrambleRandomChars, 4000);
+
+        // Leer configuración directamente del botón activo del DOM (a prueba de fallos)
+        const activeStormBtn = document.querySelector('.btn-storm-diff.active');
+        if (activeStormBtn) {
+            stormIntervalMs = parseInt(activeStormBtn.dataset.interval, 10) || 4000;
+            stormCharCount = parseInt(activeStormBtn.dataset.count, 10) || 2;
+        }
+
+        stormInterval = setInterval(scrambleRandomChars, stormIntervalMs);
     }
 
     function scrambleRandomChars() {
@@ -1275,8 +1322,8 @@
 
         if (availableIndices.length === 0) return;
 
-        // Elegir de 1 a 2 letras nuevas adelante
-        const count = Math.min(Math.floor(Math.random() * 2) + 1, availableIndices.length);
+        // Elegir la cantidad de letras configurada según la dificultad (1, 2, 3 o 4)
+        const count = Math.min(stormCharCount, availableIndices.length);
         const symbols = ['@', '#', '$', '*', '&', '!', '?', '%'];
 
         for (let i = 0; i < count; i++) {
@@ -1317,6 +1364,14 @@
 
     function pickDeadKeys() {
         deadKeys = [];
+
+        // Leer configuración directamente del botón activo del DOM (a prueba de fallos)
+        const activeDeadzoneBtn = document.querySelector('.btn-deadzone-diff.active');
+        if (activeDeadzoneBtn) {
+            deadKeysCount = parseInt(activeDeadzoneBtn.dataset.keys, 10) || 3;
+        }
+        const countNeeded = deadKeysCount || 3;
+        
         // Extraer letras alfabéticas únicas del texto actual
         const lettersInText = Array.from(new Set(
             characters
@@ -1324,16 +1379,16 @@
                 .filter(c => /^[a-zñ]$/i.test(c))
         ));
 
-        if (lettersInText.length >= 3) {
-            const shuffled = lettersInText.sort(() => 0.5 - Math.random());
-            deadKeys = shuffled.slice(0, 3);
-        } else if (lettersInText.length === 2) {
-            deadKeys = [lettersInText[0], lettersInText[1], 'a'];
-        } else if (lettersInText.length === 1) {
-            deadKeys = [lettersInText[0], 'e', 'a'];
-        } else {
-            deadKeys = ['a', 'e', 'o'];
+        // Rellenar con letras comunes del español si el texto tuviera menos letras únicas
+        const fallbackLetters = ['a', 'e', 'o', 's', 'r', 'n', 'i', 'l', 'c', 't', 'd', 'u'];
+        for (const fb of fallbackLetters) {
+            if (!lettersInText.includes(fb)) {
+                lettersInText.push(fb);
+            }
         }
+
+        const shuffled = lettersInText.sort(() => 0.5 - Math.random());
+        deadKeys = shuffled.slice(0, countNeeded);
 
         if (deadzoneKeysDisplay) {
             deadzoneKeysDisplay.innerHTML = deadKeys
