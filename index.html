@@ -69,7 +69,7 @@
                             <path d="M6 4h12a2 2 0 0 1 2 2v3a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6V6a2 2 0 0 1 2-2z"></path>
                         </svg>
                         <span>Logros</span>
-                        <span class="achievements-badge-count" id="achievements-badge-count">0/17</span>
+                        <span class="achievements-badge-count" id="achievements-badge-count">0/18</span>
                     </button>
 
                     <!-- Theme Menu -->
@@ -330,6 +330,28 @@
                             <button class="btn btn-secondary btn-sm" id="btn-rand-long">Largo</button>
                         </div>
                     </div>
+
+                    <!-- Modo Aprendizaje (Touch Typing Tutor) -->
+                    <div class="tutor-entry-card">
+                        <div class="tutor-entry-info">
+                            <span class="tutor-entry-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                    <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01"></path>
+                                    <path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"></path>
+                                    <path d="M8 16h8"></path>
+                                </svg>
+                                Modo Aprendizaje
+                            </span>
+                            <span class="tutor-entry-subtitle">Aprende a colocar los dedos y domina el teclado desde cero — 6 niveles progresivos</span>
+                        </div>
+                        <button type="button" class="btn btn-tutor-start" id="btn-tutor-start">
+                            Empezar
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -485,6 +507,168 @@
                 </div>
             </div>
         </section>
+
+        <!-- ===== MODO APRENDIZAJE (Touch Typing Tutor) ===== -->
+        <section id="tutor-section" class="section tutor-section hidden">
+            <!-- Tutor Header -->
+            <div class="tutor-header">
+                <div class="tutor-header-left">
+                    <div class="tutor-title-group">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01"></path>
+                            <path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"></path>
+                            <path d="M8 16h8"></path>
+                        </svg>
+                        <h2 class="tutor-main-title">Modo Aprendizaje</h2>
+                    </div>
+                    <span class="tutor-level-label" id="tutor-level-label">Nivel 1 — Fila Guía</span>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="tutor-exit-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    Salir
+                </button>
+            </div>
+
+            <!-- Level Selector -->
+            <div class="tutor-level-selector">
+                <button class="tutor-level-btn active" data-level="1">1</button>
+                <button class="tutor-level-btn" data-level="2">2</button>
+                <button class="tutor-level-btn" data-level="3">3</button>
+                <button class="tutor-level-btn" data-level="4">4</button>
+                <button class="tutor-level-btn" data-level="5">5</button>
+                <button class="tutor-level-btn" data-level="6">6</button>
+            </div>
+
+            <!-- Tutor Text Display -->
+            <div class="card glass-card tutor-text-card">
+                <div id="tutor-text-display" class="tutor-text-display"></div>
+            </div>
+
+            <!-- Tutor Progress -->
+            <div class="tutor-progress-wrapper">
+                <div class="tutor-progress-bar-container">
+                    <div id="tutor-progress-bar" class="tutor-progress-bar-fill"></div>
+                </div>
+                <span id="tutor-progress-text" class="tutor-progress-text">0%</span>
+            </div>
+
+            <!-- Virtual Keyboard -->
+            <!-- Virtual Keyboard (Layout Escalonado Tipo Ladrillo) -->
+            <div class="tutor-keyboard" id="tutor-keyboard">
+                <!-- Row 1: Number Row -->
+                <div class="kb-row kb-row-numbers">
+                    <kbd data-key="1" class="kb-key finger-lp">1</kbd>
+                    <kbd data-key="2" class="kb-key finger-lr">2</kbd>
+                    <kbd data-key="3" class="kb-key finger-lm">3</kbd>
+                    <kbd data-key="4" class="kb-key finger-li">4</kbd>
+                    <kbd data-key="5" class="kb-key finger-li">5</kbd>
+                    <kbd data-key="6" class="kb-key finger-ri">6</kbd>
+                    <kbd data-key="7" class="kb-key finger-ri">7</kbd>
+                    <kbd data-key="8" class="kb-key finger-rm">8</kbd>
+                    <kbd data-key="9" class="kb-key finger-rr">9</kbd>
+                    <kbd data-key="0" class="kb-key finger-rp">0</kbd>
+                    <kbd data-key="Backspace" class="kb-key kb-mod kb-backspace">⌫ Borrar</kbd>
+                </div>
+                <!-- Row 2: QWERTY (Desplazada hacia la derecha por Tab) -->
+                <div class="kb-row kb-row-top">
+                    <kbd data-key="Tab" class="kb-key kb-mod kb-tab">⇥ Tab</kbd>
+                    <kbd data-key="q" class="kb-key finger-lp">Q</kbd>
+                    <kbd data-key="w" class="kb-key finger-lr">W</kbd>
+                    <kbd data-key="e" class="kb-key finger-lm">E</kbd>
+                    <kbd data-key="r" class="kb-key finger-li">R</kbd>
+                    <kbd data-key="t" class="kb-key finger-li">T</kbd>
+                    <kbd data-key="y" class="kb-key finger-ri">Y</kbd>
+                    <kbd data-key="u" class="kb-key finger-ri">U</kbd>
+                    <kbd data-key="i" class="kb-key finger-rm">I</kbd>
+                    <kbd data-key="o" class="kb-key finger-rr">O</kbd>
+                    <kbd data-key="p" class="kb-key finger-rp">P</kbd>
+                </div>
+                <!-- Row 3: Home Row (Desplazada aún más a la derecha por Bloq Mayús) -->
+                <div class="kb-row kb-row-home">
+                    <kbd data-key="CapsLock" class="kb-key kb-mod kb-caps">⇪ Bloq</kbd>
+                    <kbd data-key="a" class="kb-key finger-lp home-key">A</kbd>
+                    <kbd data-key="s" class="kb-key finger-lr home-key">S</kbd>
+                    <kbd data-key="d" class="kb-key finger-lm home-key">D</kbd>
+                    <kbd data-key="f" class="kb-key finger-li home-key has-bump">F</kbd>
+                    <kbd data-key="g" class="kb-key finger-li">G</kbd>
+                    <kbd data-key="h" class="kb-key finger-ri">H</kbd>
+                    <kbd data-key="j" class="kb-key finger-ri home-key has-bump">J</kbd>
+                    <kbd data-key="k" class="kb-key finger-rm home-key">K</kbd>
+                    <kbd data-key="l" class="kb-key finger-rr home-key">L</kbd>
+                    <kbd data-key="ñ" class="kb-key finger-rp home-key">Ñ</kbd>
+                    <kbd data-key="Enter" class="kb-key kb-mod kb-enter">↵ Intro</kbd>
+                </div>
+                <!-- Row 4: Bottom Row (Desplazada a la derecha por Shift Izquierdo) -->
+                <div class="kb-row kb-row-bottom">
+                    <kbd data-key="Shift" class="kb-key kb-shift kb-shift-left finger-lp">⇧ Shift</kbd>
+                    <kbd data-key="z" class="kb-key finger-lp">Z</kbd>
+                    <kbd data-key="x" class="kb-key finger-lr">X</kbd>
+                    <kbd data-key="c" class="kb-key finger-lm">C</kbd>
+                    <kbd data-key="v" class="kb-key finger-li">V</kbd>
+                    <kbd data-key="b" class="kb-key finger-li">B</kbd>
+                    <kbd data-key="n" class="kb-key finger-ri">N</kbd>
+                    <kbd data-key="m" class="kb-key finger-ri">M</kbd>
+                    <kbd data-key="," class="kb-key finger-rm">,</kbd>
+                    <kbd data-key="." class="kb-key finger-rr">.</kbd>
+                    <kbd data-key="Shift" class="kb-key kb-shift kb-shift-right finger-rp">⇧ Shift</kbd>
+                </div>
+                <!-- Row 5: Space Row -->
+                <div class="kb-row kb-row-space">
+                    <kbd class="kb-key kb-mod kb-ctrl">Ctrl</kbd>
+                    <kbd class="kb-key kb-mod kb-alt">Alt</kbd>
+                    <kbd data-key=" " class="kb-key kb-space finger-thumb">Espacio</kbd>
+                    <kbd class="kb-key kb-mod kb-alt">Alt Gr</kbd>
+                    <kbd class="kb-key kb-mod kb-ctrl">Ctrl</kbd>
+                </div>
+            </div>
+
+            <!-- Hands Graphic -->
+            <div class="tutor-hands" id="tutor-hands">
+                <!-- Left Hand -->
+                <div class="hand hand-left">
+                    <div class="hand-label">Izquierda</div>
+                    <div class="fingers-row">
+                        <div class="finger finger-left-pinky finger-lp" title="Meñique">M</div>
+                        <div class="finger finger-left-ring finger-lr" title="Anular">A</div>
+                        <div class="finger finger-left-middle finger-lm" title="Medio">D</div>
+                        <div class="finger finger-left-index finger-li" title="Índice">I</div>
+                        <div class="finger finger-left-thumb finger-thumb" title="Pulgar">P</div>
+                    </div>
+                </div>
+                <!-- Right Hand -->
+                <div class="hand hand-right">
+                    <div class="hand-label">Derecha</div>
+                    <div class="fingers-row">
+                        <div class="finger finger-right-thumb finger-thumb" title="Pulgar">P</div>
+                        <div class="finger finger-right-index finger-ri" title="Índice">I</div>
+                        <div class="finger finger-right-middle finger-rm" title="Medio">D</div>
+                        <div class="finger finger-right-ring finger-rr" title="Anular">A</div>
+                        <div class="finger finger-right-pinky finger-rp" title="Meñique">M</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tutor Controls -->
+            <div class="tutor-controls">
+                <button class="btn btn-secondary" id="tutor-restart-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Reiniciar nivel
+                </button>
+                <button class="btn btn-primary hidden" id="tutor-next-btn">
+                    Siguiente nivel
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </section>
     </div>
 
     <!-- Achievements Modal / Panel -->
@@ -510,7 +694,7 @@
             <div class="achievements-summary">
                 <div class="achievements-progress-info">
                     <span class="achievements-progress-label">Progreso Total</span>
-                    <span class="achievements-progress-score" id="achievements-progress-score">0 / 17 (0%)</span>
+                    <span class="achievements-progress-score" id="achievements-progress-score">0 / 18 (0%)</span>
                 </div>
                 <div class="achievements-bar-container">
                     <div class="achievements-bar-fill" id="achievements-bar-fill" style="width: 0%;"></div>

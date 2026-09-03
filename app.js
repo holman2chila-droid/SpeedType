@@ -101,9 +101,36 @@
     const achievementsBarFill = document.getElementById('achievements-bar-fill');
     const achievementsGrid = document.getElementById('achievements-grid');
     const achCatButtons = document.querySelectorAll('.ach-cat-btn');
-    const achievementContainer = document.getElementById('achievement-container');
+    // Tutor Mode DOM elements
+    const tutorSection = document.getElementById('tutor-section');
+    const btnTutorStart = document.getElementById('btn-tutor-start');
+    const tutorExitBtn = document.getElementById('tutor-exit-btn');
+    const tutorLevelLabel = document.getElementById('tutor-level-label');
+    const tutorLevelBtns = document.querySelectorAll('.tutor-level-btn');
+    const tutorTextDisplay = document.getElementById('tutor-text-display');
+    const tutorProgressBar = document.getElementById('tutor-progress-bar');
+    const tutorProgressText = document.getElementById('tutor-progress-text');
+    const tutorRestartBtn = document.getElementById('tutor-restart-btn');
+    const tutorNextBtn = document.getElementById('tutor-next-btn');
+    const tutorKeys = document.querySelectorAll('.tutor-keyboard .kb-key');
+    const tutorFingers = document.querySelectorAll('.tutor-hands .finger');
 
     // ===== State =====
+    let isTutorMode = false;
+    let tutorCurrentLevel = 1;
+    let tutorUnlockedLevel = 1;
+    let tutorText = '';
+    let tutorCursor = 0;
+    let tutorCharSpans = [];
+
+    try {
+        const savedUnlocked = localStorage.getItem('speedtype-tutor-unlocked');
+        if (savedUnlocked) {
+            tutorUnlockedLevel = parseInt(savedUnlocked, 10) || 1;
+        }
+    } catch (e) {
+        console.warn('Error reading speedtype-tutor-unlocked:', e);
+    }
     let originalText = '';
     let characters = [];       // Array of expected characters
     let charSpans = [];        // Cached span references
@@ -409,6 +436,38 @@
                 renderAchievementsGrid();
             });
         });
+
+        // --- Modo Aprendizaje (Tutor) Eventos ---
+        if (btnTutorStart) {
+            btnTutorStart.addEventListener('click', enterTutorMode);
+        }
+
+        if (tutorExitBtn) {
+            tutorExitBtn.addEventListener('click', exitTutorMode);
+        }
+
+        if (tutorRestartBtn) {
+            tutorRestartBtn.addEventListener('click', () => loadTutorLevel(tutorCurrentLevel));
+        }
+
+        if (tutorNextBtn) {
+            tutorNextBtn.addEventListener('click', () => {
+                if (tutorCurrentLevel < TUTOR_LESSONS.length) {
+                    loadTutorLevel(tutorCurrentLevel + 1);
+                } else {
+                    loadTutorLevel(1);
+                }
+            });
+        }
+
+        tutorLevelBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lvl = parseInt(btn.dataset.level, 10);
+                loadTutorLevel(lvl);
+            });
+        });
+
+        window.addEventListener('keydown', handleTutorKeydown);
     }
 
     // ===== Pick random text across ALL available categories =====
@@ -852,7 +911,7 @@
 
     // ===== Handle Input (character typed) =====
     function handleInput(e) {
-        if (isFinished || isCountingDown || isGameOver) return;
+        if (isTutorMode || isFinished || isCountingDown || isGameOver) return;
 
         // Start timer on first keypress
         if (!isStarted) {
@@ -1019,7 +1078,7 @@
 
     // ===== Handle Keydown (Backspace, Tab) =====
     function handleKeydown(e) {
-        if (isFinished || isCountingDown || isGameOver) return;
+        if (isTutorMode || isFinished || isCountingDown || isGameOver) return;
 
         if (e.key === 'Backspace') {
             e.preventDefault();
@@ -1565,6 +1624,16 @@
             icono: '🌟',
             completado: false,
             fecha: null
+        },
+        // 6. Categoría: Modo Aprendizaje desde Cero
+        {
+            id: 'tutor-master',
+            titulo: 'Graduado del Teclado',
+            descripcion: 'Completar con éxito los 6 niveles del Modo Aprendizaje desde Cero.',
+            categoria: 'persistencia',
+            icono: '🎓',
+            completado: false,
+            fecha: null
         }
     ];
 
@@ -1931,21 +2000,358 @@
         showSection('setup');
     }
 
+    // ===================================================
+    // 7. MÓDULO: MOTOR DEL MODO APRENDIZAJE (TOUCH TYPING TUTOR)
+    // ===================================================
+
+    const TUTOR_LESSONS = [
+        {
+            level: 1,
+            title: "Nivel 1 — Fila Guía",
+            text: "asdf jklñ asdf jklñ fads jkal dask fñlj"
+        },
+        {
+            level: 2,
+            title: "Nivel 2 — Extensiones Superiores (e, i)",
+            text: "asde jkli feda lise eñid kase dief sial"
+        },
+        {
+            level: 3,
+            title: "Nivel 3 — Fila Superior Completa",
+            text: "quer tipo wert yuio prue quie rope tupi"
+        },
+        {
+            level: 4,
+            title: "Nivel 4 — Fila Inferior Completa",
+            text: "zxcv bnmz cxvb nmzx vbnm zcxv bcnm vxzc"
+        },
+        {
+            level: 5,
+            title: "Nivel 5 — Palabras Cortas Reales",
+            text: "el dado de seda la casa de ana ese sol sale"
+        },
+        {
+            level: 6,
+            title: "Nivel 6 — Mayúsculas y Puntuación",
+            text: "Ana sale. El sol, la luna. Esa casa, de seda."
+        }
+    ];
+
+    const CHAR_TO_FINGER_MAP = {
+        // Meñique Izquierdo (1, Q, A, Z)
+        '1': 'finger-left-pinky', 'q': 'finger-left-pinky', 'Q': 'finger-left-pinky',
+        'a': 'finger-left-pinky', 'A': 'finger-left-pinky', 'z': 'finger-left-pinky', 'Z': 'finger-left-pinky',
+
+        // Anular Izquierdo (2, W, S, X)
+        '2': 'finger-left-ring', 'w': 'finger-left-ring', 'W': 'finger-left-ring',
+        's': 'finger-left-ring', 'S': 'finger-left-ring', 'x': 'finger-left-ring', 'X': 'finger-left-ring',
+
+        // Medio Izquierdo (3, E, D, C)
+        '3': 'finger-left-middle', 'e': 'finger-left-middle', 'E': 'finger-left-middle',
+        'd': 'finger-left-middle', 'D': 'finger-left-middle', 'c': 'finger-left-middle', 'C': 'finger-left-middle',
+
+        // Índice Izquierdo (4, 5, R, T, F, G, V, B)
+        '4': 'finger-left-index', '5': 'finger-left-index',
+        'r': 'finger-left-index', 'R': 'finger-left-index', 't': 'finger-left-index', 'T': 'finger-left-index',
+        'f': 'finger-left-index', 'F': 'finger-left-index', 'g': 'finger-left-index', 'G': 'finger-left-index',
+        'v': 'finger-left-index', 'V': 'finger-left-index', 'b': 'finger-left-index', 'B': 'finger-left-index',
+
+        // Pulgares (Espacio)
+        ' ': 'finger-thumb',
+
+        // Índice Derecho (6, 7, Y, U, H, J, N, M)
+        '6': 'finger-right-index', '7': 'finger-right-index',
+        'y': 'finger-right-index', 'Y': 'finger-right-index', 'u': 'finger-right-index', 'U': 'finger-right-index',
+        'h': 'finger-right-index', 'H': 'finger-right-index', 'j': 'finger-right-index', 'J': 'finger-right-index',
+        'n': 'finger-right-index', 'N': 'finger-right-index', 'm': 'finger-right-index', 'M': 'finger-right-index',
+
+        // Medio Derecho (8, I, K, coma)
+        '8': 'finger-right-middle', 'i': 'finger-right-middle', 'I': 'finger-right-middle',
+        'k': 'finger-right-middle', 'K': 'finger-right-middle', ',': 'finger-right-middle',
+
+        // Anular Derecho (9, O, L, punto)
+        '9': 'finger-right-ring', 'o': 'finger-right-ring', 'O': 'finger-right-ring',
+        'l': 'finger-right-ring', 'L': 'finger-right-ring', '.': 'finger-right-ring',
+
+        // Meñique Derecho (0, P, Ñ, guión, etc.)
+        '0': 'finger-right-pinky', 'p': 'finger-right-pinky', 'P': 'finger-right-pinky',
+        'ñ': 'finger-right-pinky', 'Ñ': 'finger-right-pinky', '-': 'finger-right-pinky'
+    };
+
+    function updateTutorActiveKey() {
+        tutorKeys.forEach(k => k.classList.remove('key-active'));
+        tutorFingers.forEach(f => f.classList.remove('finger-active'));
+
+        if (tutorCursor >= tutorText.length) return;
+
+        const expectedChar = tutorText[tutorCursor];
+        const isUpper = (expectedChar >= 'A' && expectedChar <= 'Z') || expectedChar === 'Ñ';
+        const baseKey = expectedChar.toLowerCase();
+
+        // 1. Resaltar tecla(s) correspondiente(s)
+        tutorKeys.forEach(k => {
+            const dKey = k.getAttribute('data-key');
+            if (dKey === baseKey || (expectedChar === ' ' && dKey === ' ')) {
+                k.classList.add('key-active');
+            }
+            if (isUpper && dKey === 'Shift') {
+                k.classList.add('key-active');
+            }
+        });
+
+        // 2. Resaltar dedo correspondiente en las manos
+        const fingerClass = CHAR_TO_FINGER_MAP[expectedChar] || CHAR_TO_FINGER_MAP[baseKey];
+        if (fingerClass) {
+            if (fingerClass === 'finger-thumb') {
+                tutorFingers.forEach(f => {
+                    if (f.classList.contains('finger-left-thumb') || f.classList.contains('finger-right-thumb')) {
+                        f.classList.add('finger-active');
+                    }
+                });
+            } else {
+                tutorFingers.forEach(f => {
+                    if (f.classList.contains(fingerClass)) {
+                        f.classList.add('finger-active');
+                    }
+                });
+            }
+        }
+    }
+
+    function renderTutorText() {
+        if (!tutorTextDisplay) return;
+        tutorTextDisplay.innerHTML = '';
+        tutorCharSpans = [];
+
+        const chars = tutorText.split('');
+        chars.forEach((char, i) => {
+            const span = document.createElement('span');
+            span.className = 'tutor-char';
+            span.textContent = char;
+
+            if (i === 0) {
+                span.classList.add('char-current');
+                if (char === ' ') span.classList.add('char-space');
+            } else {
+                span.classList.add('char-pending');
+            }
+
+            tutorTextDisplay.appendChild(span);
+            tutorCharSpans.push(span);
+        });
+
+        updateTutorProgress();
+        updateTutorActiveKey();
+    }
+
+    function updateTutorProgress() {
+        const pct = tutorText.length > 0 ? Math.round((tutorCursor / tutorText.length) * 100) : 0;
+        if (tutorProgressBar) tutorProgressBar.style.width = pct + '%';
+        if (tutorProgressText) tutorProgressText.textContent = pct + '%';
+    }
+
+    function handleTutorKeydown(e) {
+        if (!isTutorMode) return;
+
+        // Ignorar modificadores solitarios y teclas de sistema
+        if (['Alt', 'Control', 'Meta', 'CapsLock', 'Tab', 'Escape', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            return;
+        }
+
+        if (e.key === 'Shift') return;
+
+        if (tutorCursor >= tutorText.length) return;
+
+        const expectedChar = tutorText[tutorCursor];
+
+        // Prevenir scroll de la página con Espacio
+        if (e.key === ' ' || e.key === 'Backspace') {
+            e.preventDefault();
+        }
+
+        if (e.key === expectedChar) {
+            // === ACIERTO ===
+            if (tutorCharSpans[tutorCursor]) {
+                tutorCharSpans[tutorCursor].classList.remove('char-current', 'char-space');
+                tutorCharSpans[tutorCursor].classList.add('char-correct');
+            }
+
+            const pressedKeyLower = e.key.toLowerCase();
+            tutorKeys.forEach(k => {
+                const dKey = k.getAttribute('data-key');
+                if (dKey === pressedKeyLower || (e.key === ' ' && dKey === ' ')) {
+                    k.classList.remove('key-error');
+                    k.classList.add('key-pressed');
+                    setTimeout(() => k.classList.remove('key-pressed'), 140);
+                }
+            });
+
+            tutorCursor++;
+            updateTutorProgress();
+
+            if (tutorCursor < tutorText.length) {
+                if (tutorCharSpans[tutorCursor]) {
+                    tutorCharSpans[tutorCursor].classList.remove('char-pending');
+                    tutorCharSpans[tutorCursor].classList.add('char-current');
+                    if (tutorText[tutorCursor] === ' ') {
+                        tutorCharSpans[tutorCursor].classList.add('char-space');
+                    }
+                }
+                updateTutorActiveKey();
+            } else {
+                // === 100% COMPLETADO ===
+                tutorKeys.forEach(k => k.classList.remove('key-active'));
+                tutorFingers.forEach(f => f.classList.remove('finger-active'));
+
+                // Desbloqueo estricto del siguiente nivel
+                if (tutorCurrentLevel === tutorUnlockedLevel && tutorUnlockedLevel < TUTOR_LESSONS.length) {
+                    tutorUnlockedLevel = tutorCurrentLevel + 1;
+                    try {
+                        localStorage.setItem('speedtype-tutor-unlocked', tutorUnlockedLevel);
+                    } catch (e) {
+                        console.warn('Error saving tutor progress:', e);
+                    }
+                }
+
+                updateTutorLevelButtons();
+
+                // Si completó el nivel 6 (todos los niveles del tutor) -> Otorgar logro
+                if (tutorCurrentLevel === TUTOR_LESSONS.length) {
+                    unlockAchievement('tutor-master');
+                }
+
+                if (tutorNextBtn) {
+                    if (tutorCurrentLevel < TUTOR_LESSONS.length) {
+                        tutorNextBtn.textContent = `Avanzar a Nivel ${tutorCurrentLevel + 1} →`;
+                        tutorNextBtn.classList.remove('hidden');
+                    } else {
+                        tutorNextBtn.textContent = '¡Todos los niveles completados! 🏆';
+                        tutorNextBtn.classList.remove('hidden');
+                    }
+                }
+            }
+        } else {
+            // === ERROR: BLOQUEO ESTRICTO ===
+            // NO se avanza el texto.
+            const wrongKeyLower = e.key.toLowerCase();
+            tutorKeys.forEach(k => {
+                const dKey = k.getAttribute('data-key');
+                if (dKey === wrongKeyLower || (e.key === ' ' && dKey === ' ')) {
+                    k.classList.remove('key-active', 'key-pressed');
+                    k.classList.add('key-error');
+                    setTimeout(() => {
+                        k.classList.remove('key-error');
+                        updateTutorActiveKey();
+                    }, 300);
+                }
+            });
+
+            // Reforzar la tecla esperada que parpadea
+            const expectedBase = expectedChar.toLowerCase();
+            tutorKeys.forEach(k => {
+                const dKey = k.getAttribute('data-key');
+                if (dKey === expectedBase || (expectedChar === ' ' && dKey === ' ')) {
+                    k.classList.remove('key-active');
+                    void k.offsetWidth;
+                    k.classList.add('key-active');
+                }
+            });
+        }
+    }
+
+    function updateTutorLevelButtons() {
+        tutorLevelBtns.forEach(btn => {
+            const lvl = parseInt(btn.dataset.level, 10);
+            btn.classList.toggle('active', lvl === tutorCurrentLevel);
+            btn.classList.toggle('completed', lvl < tutorUnlockedLevel);
+            btn.classList.toggle('locked', lvl > tutorUnlockedLevel);
+            btn.title = lvl > tutorUnlockedLevel
+                ? `Nivel ${lvl} bloqueado. Completa el Nivel ${lvl - 1} primero.`
+                : `Nivel ${lvl}`;
+        });
+    }
+
+    function loadTutorLevel(level) {
+        const targetLevel = Math.max(1, Math.min(level, TUTOR_LESSONS.length));
+
+        // Bloqueo estricto: rechazar niveles no desbloqueados
+        if (targetLevel > tutorUnlockedLevel) {
+            const lockedBtn = document.querySelector(`.tutor-level-btn[data-level="${targetLevel}"]`);
+            if (lockedBtn) {
+                lockedBtn.classList.remove('shake-error');
+                void lockedBtn.offsetWidth;
+                lockedBtn.classList.add('shake-error');
+                setTimeout(() => lockedBtn.classList.remove('shake-error'), 450);
+            }
+            showAchievementToast('🔒', 'Nivel Bloqueado', `Debes completar el Nivel ${tutorUnlockedLevel} primero para continuar.`);
+            return;
+        }
+
+        tutorCurrentLevel = targetLevel;
+        const lesson = TUTOR_LESSONS[tutorCurrentLevel - 1];
+
+        tutorText = lesson.text;
+        tutorCursor = 0;
+
+        if (tutorLevelLabel) {
+            tutorLevelLabel.textContent = lesson.title;
+        }
+
+        updateTutorLevelButtons();
+
+        if (tutorNextBtn) {
+            tutorNextBtn.classList.add('hidden');
+        }
+
+        renderTutorText();
+    }
+
+    function enterTutorMode() {
+        isTutorMode = true;
+
+        // Desactivación estricta de todos los modos gamificados y bucles
+        stopFadeLoop();
+        clearStorm();
+        clearDeadzone();
+        clearCountdown();
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        document.body.classList.remove('survival-active', 'fade-active', 'storm-active', 'deadzone-active', 'practice-active');
+        if (practiceModeBanner) practiceModeBanner.classList.add('hidden');
+        hideAntiCheatWarning();
+
+        showSection('tutor');
+        loadTutorLevel(tutorUnlockedLevel || 1);
+    }
+
+    function exitTutorMode() {
+        isTutorMode = false;
+        tutorKeys.forEach(k => k.classList.remove('key-active', 'key-pressed', 'key-error'));
+        tutorFingers.forEach(f => f.classList.remove('finger-active'));
+        goToSetup();
+    }
+
     // ===== Show Section =====
     function showSection(name) {
         setupSection.classList.add('hidden');
         typingSection.classList.add('hidden');
         resultsSection.classList.add('hidden');
+        if (tutorSection) tutorSection.classList.add('hidden');
 
         const target = name === 'setup' ? setupSection :
                        name === 'typing' ? typingSection :
-                       resultsSection;
+                       name === 'results' ? resultsSection :
+                       name === 'tutor' ? tutorSection : null;
 
-        // Re-trigger animation
-        target.style.animation = 'none';
-        void target.offsetWidth; // force reflow
-        target.style.animation = '';
-        target.classList.remove('hidden');
+        if (target) {
+            target.style.animation = 'none';
+            void target.offsetWidth; // force reflow
+            target.style.animation = '';
+            target.classList.remove('hidden');
+        }
     }
 
     // ===== Start App =====
